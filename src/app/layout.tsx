@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
+import { Box, CssBaseline } from "@mui/material";
 
+// Font setup
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -26,16 +28,18 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black`}
+        className={`${geistSans.variable} ${geistMono.variable}`}
+        style={{ backgroundColor: "#000", color: "#fff" }}
       >
-        <div className="flex">
-          <div className="w-[280px] flex-none">
+        <CssBaseline />
+        <Box display="flex" minHeight="100vh">
+          <Box width="280px" flexShrink={0}>
             <Sidebar />
-          </div>
-          <main className="flex-1 min-h-screen bg-black overflow-y-auto">
+          </Box>
+          <Box flexGrow={1} overflow="auto">
             {children}
-          </main>
-        </div>
+          </Box>
+        </Box>
       </body>
     </html>
   );
