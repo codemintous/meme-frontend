@@ -46,6 +46,14 @@ export default function Home() {
       id: "0x34_7fa0",
       image: "/agents/meme5.jpeg",
       description: "You are Beaver AI Ambassador, the friendly ambassador and human's chat"
+    },
+    {
+      name: "Beaver1",
+      category: "Animals",
+      chain: "DAM/SUI",
+      id: "0x34_7fa2",
+      image: "/agents/meme5.jpeg",
+      description: "You are Beaver AI Ambassador, the friendly ambassador and human's chat"
     }
   ];
 
@@ -106,6 +114,7 @@ export default function Home() {
       lastHour: "-",
       image: "/agents/meme2.png"
     },
+   
   ];
 
   return (
@@ -124,8 +133,6 @@ export default function Home() {
 
       {/* Trending Agents Section */}
       <div className="mb-12">
-
-
         <div className="relative px-8">
           {/* Left Chevron */}
           <button
@@ -141,8 +148,7 @@ export default function Home() {
           </button>
 
           {/* Agents Container */}
-          <div>
-
+          <div className="w-full">
             <div className="flex items-center gap-2 mb-6">
               <TrendingUp />
               <h2 className="text-2xl font-bold">Trending Agents</h2>
@@ -150,14 +156,20 @@ export default function Home() {
 
             <div
               id="agents-container"
-              className="flex gap-4 overflow-x-auto pb-4 scroll-smooth scrollbar-hide rounded-lg"
+              className="flex gap-4 overflow-x-auto pb-4 scroll-smooth scrollbar-hide rounded-lg whitespace-nowrap"
+              style={{ 
+                scrollbarWidth: 'none', 
+                msOverflowStyle: 'none',
+                WebkitOverflowScrolling: 'touch'
+              }}
             >
-              {trendingAgents.map((agent) => (
-                <TrendingAgentCard key={agent.id} agent={agent} />
-              ))}
+              <div className="flex gap-4 min-w-min">
+                {trendingAgents.map((agent) => (
+                  <TrendingAgentCard key={agent.id} agent={agent} />
+                ))}
+              </div>
             </div>
           </div>
-
 
           {/* Right Chevron */}
           <button

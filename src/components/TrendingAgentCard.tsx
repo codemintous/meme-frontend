@@ -17,7 +17,7 @@ interface TrendingAgentCardProps {
 export default function TrendingAgentCard({ agent }: TrendingAgentCardProps) {
   return (
     <div 
-      className="w-full h-[419px] w-[320px] flex flex-col gap-2 rounded-lg bg-zinc-900 border border-zinc-700/50 shadow-zinc-50 overflow-hidden hover:border-zinc-50 hover:shadow-[0px_0px_18px_0px_#FFFFFF80] transition-colors duration-500 ease-in-out"
+      className="h-[419px] w-[180px] flex-shrink-0 flex flex-col gap-2 rounded-lg bg-zinc-900 border border-zinc-700/50 shadow-zinc-50 overflow-hidden hover:border-zinc-50 hover:shadow-[0px_0px_18px_0px_#FFFFFF80] transition-colors duration-500 ease-in-out"
       style={{
         backgroundImage: `url(${agent.image})`,
         backgroundSize: 'cover',
@@ -56,8 +56,11 @@ export default function TrendingAgentCard({ agent }: TrendingAgentCardProps) {
             </h3>
           </div>
           <div className="h-15">
-            <p className="text-zinc-50 text-xs leading-5 font-medium">
-              {agent.description}
+          <p className="text-zinc-50 text-xs leading-5 font-medium text-wrap">
+              {agent.description.length > 55 
+                ? `${agent.description.slice(0, 55)}...`
+                : agent.description
+              }
             </p>
           </div>
         </div>
