@@ -79,7 +79,7 @@ const TokenForm = ({ onBack } : any) => {
         <Avatar sx={{ width: 56, height: 56, bgcolor: '#444' }} />
         <Box sx={{ display: 'flex', flexDirection: 'row', flexGrow: 1, gap: 2 }}>
           <TextField
-            placeholder="Name"
+            placeholder="Token Name"
             fullWidth
             InputProps={{ sx: { color: 'white' } }}
             sx={{
@@ -90,7 +90,7 @@ const TokenForm = ({ onBack } : any) => {
             }}
           />
           <TextField
-            placeholder="Symbol"
+            placeholder="Token Symbol"
             fullWidth
             InputProps={{ sx: { color: 'white' } }}
             sx={{
