@@ -9,7 +9,7 @@ const Sidebar = () => {
       <div className='flex flex-row justify-between items-center mb-8'>
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 bg-purple-600 rounded-full"></div>
-          <h1 className="text-xl font-bold">MYMEMES</h1>
+          <h1 className="text-xl font-bold">MY MEMES</h1>
         </div>
         <ChevronLeft/>
       </div>

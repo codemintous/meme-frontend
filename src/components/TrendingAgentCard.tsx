@@ -42,10 +42,10 @@ export default function TrendingAgentCard({ agent }: TrendingAgentCardProps) {
       </div>
 
       {/* Middle section - clickable area */}
-      <Link href={`/${agent.id}`} className="w-full flex-1" />
+      <Link href={`/agent/${agent.id}`} className="w-full flex-1" />
 
       {/* Bottom gradient overlay with content */}
-      <Link href={`/${agent.id}`}>
+      <Link href={`/agent/${agent.id}`}>
         <div className="w-full flex-1 flex flex-col gap-2 px-4 py-2.5 bg-gradient-to-t from-black via-zinc-900 to-transparent">
           <div className="flex flex-col items-start">
             <h2 className="text-zinc-50 text-sm leading-6 font-medium">
