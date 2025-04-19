@@ -72,16 +72,16 @@ export default function LaunchpadPage() {
     return (
       <Container maxWidth="xl" sx={{ py: 5 }}>
         <Typography variant="h4" color="white" mb={4}>
-          🔥 Launchpad Tokens
+          Launchpad Tokens
         </Typography>
   
-        <Grid container spacing={3}>
+        {/* <Grid container spacing={3}>
           {mockTokens.map((token, index) => (
             <Grid item xs={12} sm={4} md={4} key={index}>
               <LaunchedTokenCard token={token} />
             </Grid>
           ))}
-        </Grid>
+        </Grid> */}
   
         <Box textAlign="center" mt={5}>
           <Button variant="contained" color="secondary">

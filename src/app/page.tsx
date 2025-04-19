@@ -4,6 +4,7 @@ import {
   Button,
   Container,
   IconButton,
+  TextField,
   Typography,
 } from "@mui/material";
 import {
@@ -14,6 +15,8 @@ import {
 import TrendingAgentCard from "@/components/TrendingAgentCard";
 import TrendingTokenCard from "@/components/TrendingTokenCard";
 import DiscoverAgentCard from "@/components/DiscoverAgentCard";
+import { useState } from "react";
+import LatestMemes from "@/components/LatestMemes";
 
 const trendingAgents = [
   {
@@ -76,8 +79,18 @@ const trendingAgents = [
     description:
       "You are Beaver AI Ambassador, the friendly ambassador and human's chat",
   },
- 
-  
+  {
+    name: "Beaver3",
+    category: "Animals",
+    chain: "DAM/SUI",
+    id: "0x34_7fa4",
+    image: "/agents/meme5.jpeg",
+    description:
+      "You are Beaver AI Ambassador, the friendly ambassador and human's chat",
+  },
+
+
+
 ];
 
 const trendingTokens = [
@@ -139,6 +152,31 @@ const trendingTokens = [
   },
 ];
 
+
+const mockMemes = [
+  {
+    id: 1,
+    title: 'Poncho cat vs Crypto Bear',
+    image: '/agents/latestmeme1.png',
+    creator: { name: 'PonchAI', avatar: '/agents/meme1.png' },
+    votes: 23,
+  },
+  {
+    id: 2,
+    title: 'Not Financial Advice',
+    image: '/agents/latestmeme2.png',
+    creator: { name: 'AnonInvestor', avatar: '/agents/meme2.png' },
+    votes: 41,
+  },
+  {
+    id: 3,
+    title: 'Not Financial Advice',
+    image: '/agents/latestmeme3.png',
+    creator: { name: 'AnonInvestor', avatar: '/agents/meme3.png' },
+    votes: 41,
+  },
+];
+
 export default function Home() {
   const scrollLeft = (id: string) => {
     const container = document.getElementById(id);
@@ -152,6 +190,14 @@ export default function Home() {
     if (container) {
       container.scrollLeft += 300;
     }
+  };
+
+
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const handleSearch = () => {
+    console.log("Searching for:", searchTerm);
+    // Optional: apply a filter or fetch new results
   };
 
   return (
@@ -291,9 +337,10 @@ export default function Home() {
       </Box>
 
       {/* Discover Agents */}
+
       <Box position="relative" mb={6}>
-        <IconButton
-          onClick={() => scrollLeft("discover-agents-container")}
+      <IconButton
+          onClick={() => scrollLeft("discover-container")}
           sx={{
             position: "absolute",
             left: "-42px",
@@ -306,15 +353,49 @@ export default function Home() {
           <ChevronLeft sx={{ color: "white" }} />
         </IconButton>
 
-        <Box mb={2} display="flex" alignItems="center" gap={1}>
-          <TrendingUp />
-          <Typography variant="h5" fontWeight="bold">
-            Discover Agents
-          </Typography>
+        <Box mb={2} display="flex" justifyContent="space-between" alignItems="center">
+          {/* Title with icon */}
+          <Box display="flex" alignItems="center" gap={1}>
+            <TrendingUp />
+            <Typography variant="h5" fontWeight="bold">
+              Discover Agents
+            </Typography>
+          </Box>
+
+          {/* Search bar and button on the right */}
+          <Box display="flex" alignItems="center" gap={1}>
+            <TextField
+              variant="outlined"
+              size="small"
+              placeholder="Search agents..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  color: 'gray',
+                  '& fieldset': {
+                    borderColor: 'gray',
+                  },
+
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#9333ea',
+                  },
+                },
+                '& .MuiInputBase-input::placeholder': {
+                  color: 'gray',
+                  opacity: 1, // optional: makes placeholder fully visible
+                },
+              }}
+            />
+            <Button variant="contained" onClick={handleSearch} sx={{ backgroundColor: '#9333ea', '&:hover': { backgroundColor: '#7e22ce' } }} >
+              Search
+            </Button>
+          </Box>
         </Box>
 
+
         <Box
-          id="discover-agents-container"
+          id="discover-container"
           sx={{
             display: "flex",
             flexWrap: "nowrap",
@@ -332,7 +413,7 @@ export default function Home() {
         </Box>
 
         <IconButton
-          onClick={() => scrollRight("discover-agents-container")}
+          onClick={() => scrollRight("discover-container")}
           sx={{
             position: "absolute",
             right: "-42px",
@@ -345,6 +426,10 @@ export default function Home() {
           <ChevronRight sx={{ color: "white" }} />
         </IconButton>
       </Box>
+
+
+      <LatestMemes memes={mockMemes} />
     </Container>
   );
 }
+

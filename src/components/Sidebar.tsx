@@ -163,7 +163,10 @@ const Sidebar = () => {
           startIcon={<Plus size={20} />}
           sx={{ backgroundColor: '#9333ea', '&:hover': { backgroundColor: '#7e22ce' } }}
         >
+          <Link href={"/creatememe"}>
           Create Meme
+          </Link>
+          
         </Button>
         
         <Stack direction="row" spacing={1}>

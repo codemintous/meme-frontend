@@ -27,7 +27,7 @@ interface TrendingAgentCardProps {
 
 // Styled Components
 const AgentCard = styled(Card)(() => ({
-  width: 240,
+  width: 200,
   height: 200, // square
   display: 'flex',
   flexDirection: 'column',
@@ -98,7 +98,7 @@ const IconRow = styled(Box)({
 
 export default function DiscoverAgentCard({ agent }: TrendingAgentCardProps) {
   return (
-    <AgentCard sx={{ backgroundImage: `url(${agent.image})` }}>
+    <AgentCard sx={{ backgroundImage: `url(${agent.image})` ,  flexShrink: 0 }}>
       <TopOverlay>
         <Typography
           variant="body2"
