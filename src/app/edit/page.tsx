@@ -46,6 +46,26 @@ const textFieldStyles = {
 
 export default function EditPage() {
   const [tab, setTab] = React.useState(0);
+  const [avatarImage, setAvatarImage] = React.useState<string | null>(null);
+  const [bgImage, setBgImage] = React.useState<string | null>(null);
+
+  const handleImageUpload = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    type: 'avatar' | 'background'
+  ) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (type === 'avatar') {
+          setAvatarImage(reader.result as string);
+        } else {
+          setBgImage(reader.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   return (
     <Box sx={{ p: 4, backgroundColor: '#0f0f0f', minHeight: '100vh', color: 'white' }}>
@@ -65,7 +85,6 @@ export default function EditPage() {
         <Tab label="Token infos" />
       </Tabs>
 
-      {/* MAIN FLEX LAYOUT */}
       <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} gap={4} width="100%">
         {/* LEFT SECTION */}
         <Box flex={1}>
@@ -73,7 +92,7 @@ export default function EditPage() {
             Main info
           </Typography>
 
-          {/* Card with Avatar */}
+          {/* Card with Background Image */}
           <Box
             sx={{
               bgcolor: '#1e1e1e',
@@ -82,12 +101,26 @@ export default function EditPage() {
               position: 'relative',
               minHeight: 160,
               mb: 6,
+              backgroundImage: bgImage ? `url(${bgImage})` : undefined,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
             }}
           >
-            <IconButton sx={{ position: 'absolute', top: 8, right: 8 }}>
+            {/* Edit Background Button */}
+            <IconButton
+              component="label"
+              sx={{ position: 'absolute', top: 8, right: 8 }}
+            >
               <EditIcon sx={{ color: 'white' }} />
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(e) => handleImageUpload(e, 'background')}
+              />
             </IconButton>
 
+            {/* Avatar */}
             <Box
               sx={{
                 position: 'absolute',
@@ -96,8 +129,12 @@ export default function EditPage() {
                 transform: 'translateX(-50%)',
               }}
             >
-              <Avatar sx={{ width: 60, height: 60, bgcolor: '#444' }} />
+              <Avatar
+                src={avatarImage || undefined}
+                sx={{ width: 60, height: 60, bgcolor: '#444' }}
+              />
               <IconButton
+                component="label"
                 sx={{
                   bgcolor: '#2c2c2c',
                   position: 'absolute',
@@ -107,11 +144,17 @@ export default function EditPage() {
                 }}
               >
                 <EditIcon fontSize="small" sx={{ color: 'white' }} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(e) => handleImageUpload(e, 'avatar')}
+                />
               </IconButton>
             </Box>
           </Box>
 
-          {/* Name & Category in one row */}
+          {/* Name & Category */}
           <Box display="flex" gap={2} sx={{ mb: 2 }}>
             <TextField
               fullWidth
@@ -172,8 +215,7 @@ export default function EditPage() {
             </IconButton>
           </Box>
 
-          {[
-            { icon: <TwitterIcon />, label: 'X', placeholder: 'https://x.com/undefined' },
+          {[{ icon: <TwitterIcon />, label: 'X', placeholder: 'https://x.com/undefined' },
             { icon: <TelegramIcon />, label: 'Telegram', placeholder: 'https://t.me/undefined' },
             { icon: <InstagramIcon />, label: 'Instagram', placeholder: 'https://instagram.com/undefined' },
           ].map((social, index) => (

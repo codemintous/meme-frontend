@@ -10,9 +10,14 @@ import {
   Avatar,
 } from '@mui/material';
 
+type TokenFormProps = {
+  onBack: () => void; // specify that it's a function that returns nothing
+};
+
+
 const chains = ['Solana', 'Ethereum', 'Polygon'];
 
-const TokenForm = ({ onBack } : any) => {
+const TokenForm = ({ onBack }: TokenFormProps) => {
   return (
     <Box>
       <Typography variant="h4" fontWeight="bold" gutterBottom>
