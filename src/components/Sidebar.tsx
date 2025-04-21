@@ -1,6 +1,5 @@
 import Link from 'next/link';
-import Image from 'next/image';
-import { ChevronLeft, ChevronRight, Info, Plus, Rocket, Search, TrendingUp, Trophy, User, UserPlus, UsersRound, } from 'lucide-react';
+import { ChevronLeft, Info, Plus, Rocket, Search, TrendingUp, Trophy, User, UserPlus, UsersRound, } from 'lucide-react';
 
 const Sidebar = () => {
   return (

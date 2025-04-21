@@ -1,6 +1,5 @@
 "use client"
-import Image from "next/image";
-import Link from "next/link";
+
 import TrendingAgentCard from "@/components/TrendingAgentCard";
 import TrendingTokenCard from "@/components/TrendingTokenCard";
 import { ChevronLeft, ChevronRight, TrendingUp } from "lucide-react";
