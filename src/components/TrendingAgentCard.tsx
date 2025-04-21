@@ -85,6 +85,7 @@ export default function TrendingAgentCard({ agent }: TrendingAgentCardProps) {
   return (
     <AgentCard sx={{ backgroundImage: `url(${agent.image})` , width: 180, flexShrink: 0 }}>
       {/* Top gradient overlay */}
+      
       <TopOverlay>
         <Typography
           variant="body2"
