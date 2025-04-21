@@ -9,7 +9,7 @@ interface Message {
   content: string;
 }
 
-export default function AgentDetail({ params }: { params: { id: string } }) {
+export default function AgentDetail() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
 
