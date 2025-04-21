@@ -54,12 +54,14 @@ const TokenForm = ({ onBack }: TokenFormProps) => {
           fullWidth
           defaultValue="Solana"
           variant="outlined"
+          InputProps={{ sx: { color: 'white' } }}
           sx={{
             input: { color: 'white' },
             '& .MuiOutlinedInput-root': {
               '& fieldset': { borderColor: '#555' },
               '&:hover fieldset': { borderColor: '#999' },
             },
+          
           }}
         >
           {chains.map((chain) => (

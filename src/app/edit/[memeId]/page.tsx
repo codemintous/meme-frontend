@@ -35,12 +35,17 @@ const textFieldStyles = {
       borderColor: '#ccc',
     },
   },
-  input: { color: 'white' },
+
   '& .MuiInputAdornment-root svg': {
     color: '#888',
   },
   '& label': {
     color: 'white',
+  },
+  '& input, & textarea': { color: 'white' },              // text color
+  '& input::placeholder, & textarea::placeholder': {      // placeholder color
+    color: 'gray',
+    opacity: 1,
   },
 };
 
@@ -169,6 +174,7 @@ export default function EditPage() {
               label="Category"
               defaultValue=""
               sx={textFieldStyles}
+              InputProps={{ sx: { color: 'white' } }}
             >
               {categories.map((cat) => (
                 <MenuItem key={cat} value={cat}>
@@ -181,6 +187,7 @@ export default function EditPage() {
           {/* Description */}
           <TextField
             label="Description"
+             placeholder="Description"
             multiline
             fullWidth
             rows={3}

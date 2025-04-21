@@ -23,7 +23,7 @@ const trendingAgents = [
     name: "The Nutting Professor",
     category: "Science",
     chain: "PRONUT",
-    id: "b3l49nw_jr",
+    id: "1",
     image: "/agents/meme1.png",
     description:
       "Trust me, you don't want to run into The Nutting Professor after the last bell rings!",
@@ -32,7 +32,7 @@ const trendingAgents = [
     name: "ClapCat",
     category: "Gaming",
     chain: "SCLAP",
-    id: "9b3j_mzk",
+    id: "2",
     image: "/agents/meme2.png",
     description: "Sister to the famous $POPCAT",
   },
@@ -40,7 +40,7 @@ const trendingAgents = [
     name: "Akita",
     category: "Dogs",
     chain: "DOGS",
-    id: "akita",
+    id: "3",
     image: "/agents/meme3.png",
     description: "Akita",
   },
@@ -48,7 +48,7 @@ const trendingAgents = [
     name: "Non-Playable Coin",
     category: "Gaming",
     chain: "NPC/ETHEREUM",
-    id: "0x8e_08f6",
+    id: "4",
     image: "/agents/meme4.jpeg",
     description: "A meme for every 🤖 on Earth",
   },
@@ -56,7 +56,7 @@ const trendingAgents = [
     name: "Beaver",
     category: "Animals",
     chain: "DAM/SUI",
-    id: "0x34_7fa0",
+    id: "5",
     image: "/agents/meme5.jpeg",
     description:
       "You are Beaver AI Ambassador, the friendly ambassador and human's chat",
@@ -65,7 +65,7 @@ const trendingAgents = [
     name: "Beaver1",
     category: "Animals",
     chain: "DAM/SUI",
-    id: "0x34_7fa2",
+    id: "6",
     image: "/agents/meme5.jpeg",
     description:
       "You are Beaver AI Ambassador, the friendly ambassador and human's chat",
@@ -74,7 +74,7 @@ const trendingAgents = [
     name: "Beaver2",
     category: "Animals",
     chain: "DAM/SUI",
-    id: "0x34_7fa3",
+    id: "7",
     image: "/agents/meme5.jpeg",
     description:
       "You are Beaver AI Ambassador, the friendly ambassador and human's chat",
@@ -83,13 +83,11 @@ const trendingAgents = [
     name: "Beaver3",
     category: "Animals",
     chain: "DAM/SUI",
-    id: "0x34_7fa4",
+    id: "8",
     image: "/agents/meme5.jpeg",
     description:
       "You are Beaver AI Ambassador, the friendly ambassador and human's chat",
   },
-
-
 
 ];
 
@@ -393,7 +391,6 @@ export default function Home() {
           </Box>
         </Box>
 
-
         <Box
           id="discover-container"
           sx={{
@@ -426,8 +423,6 @@ export default function Home() {
           <ChevronRight sx={{ color: "white" }} />
         </IconButton>
       </Box>
-
-
       <LatestMemes memes={mockMemes} />
     </Container>
   );

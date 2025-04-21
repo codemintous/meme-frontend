@@ -13,15 +13,18 @@ import EditIcon from "@mui/icons-material/Edit";
 
 const fieldSx = {
   mb: 2,
-  "& .MuiOutlinedInput-root": {
-    "& fieldset": { borderColor: "gray" },
-    "&:hover fieldset": { borderColor: "gray" },
-    "&.Mui-focused fieldset": { borderColor: "white" },
-    "& input": { color: "white" },
+  '& .MuiOutlinedInput-root': {
+    '& fieldset': { borderColor: 'gray' },
+    '&:hover fieldset': { borderColor: 'gray' },
+    '&.Mui-focused fieldset': { borderColor: 'white' },
+    '& input, & textarea': { color: 'white' },              // text color
+    '& input::placeholder, & textarea::placeholder': {      // placeholder color
+      color: 'gray',
+      opacity: 1,
+    },
   },
-  "& .MuiInputLabel-root": { color: "gray" },
+  '& .MuiInputLabel-root': { color: 'gray' },
 };
-
 export default function MemeForm({ onBack }: { onBack: () => void }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [image, setImage] = useState<string | null>(null);
@@ -97,6 +100,8 @@ export default function MemeForm({ onBack }: { onBack: () => void }) {
         InputLabelProps={{ shrink: true }}
         sx={fieldSx}
       />
+  
+
 
       {/* Create & Back buttons */}
       <Box mt={3}>
