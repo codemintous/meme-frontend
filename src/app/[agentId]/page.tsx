@@ -19,6 +19,7 @@ import Image from 'next/image';
 import SendIcon from '@mui/icons-material/Send';
 import { Info } from '@mui/icons-material';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import AgentPopup from '@/components/AgentPopup';
 
 export default function AgentDetailPage() {
     const [tab, setTab] = useState(0);
@@ -26,6 +27,8 @@ export default function AgentDetailPage() {
     const [inputValue, setInputValue] = useState('');
     const [messages, setMessages] = useState<{ text: string, sender: 'user' | 'bot' }[]>([]);
     const open = Boolean(anchorEl);
+
+    const [popupOpen, setPopupOpen] = useState(false);
 
     const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
         setTab(newValue);
@@ -44,7 +47,7 @@ export default function AgentDetailPage() {
             const newMessages: { text: string; sender: 'user' | 'bot' }[] = [
                 ...messages,
                 { text: inputValue, sender: 'user' }
-              ];
+            ];
             setMessages(newMessages);
             setInputValue('');
 
@@ -69,17 +72,17 @@ export default function AgentDetailPage() {
                         </Box>
                     </Box>
                     <IconButton
-                            sx={{
-                              
-                                color: 'white',
-                                borderRadius: '8px',
-                                width: 48,
-                                height: 48,
-                            }}
-                           
-                        >
-                            <Info />
-                        </IconButton>
+                        sx={{
+
+                            color: 'white',
+                            borderRadius: '8px',
+                            width: 48,
+                            height: 48,
+                        }}
+                        onClick={() => setPopupOpen(true)}
+                    >
+                        <Info />
+                    </IconButton>
                 </Box>
 
 
@@ -187,7 +190,6 @@ export default function AgentDetailPage() {
                 </Box>
             </Box>
 
-            {/* Right Sidebar */}
             <Box width={300} bgcolor="#111" p={2} display="flex" flexDirection="column">
                 <Tabs value={tab} onChange={handleTabChange} textColor="inherit">
                     <Tab label="Community" />
@@ -195,8 +197,20 @@ export default function AgentDetailPage() {
                 </Tabs>
 
                 {/* Meme Thumbnails */}
-                <Box mt={2} display="flex" flexWrap="wrap" gap={1}>
-                    {Array.from({ length: 6 }).map((_, i) => (
+                <Box
+                    mt={2}
+                    sx={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: 1,
+                        maxHeight: 350, // Limit height for scrolling
+                        overflowY: 'auto', // Allow scrolling vertically
+                        '&::-webkit-scrollbar': {
+                            display: 'none', // Hide scrollbar
+                        },
+                    }}
+                >
+                    {Array.from({ length: 10 }).map((_, i) => (
                         <Box
                             key={i}
                             width={120}
@@ -216,8 +230,19 @@ export default function AgentDetailPage() {
                 </Box>
 
                 {/* Comments */}
-                <Box mt={4}>
-                    <Typography variant="subtitle2" color="gray" gutterBottom>Latest Comments</Typography>
+                <Box
+                    mt={4}
+                    sx={{
+                        maxHeight: 200, // Limit height for scrolling
+                        overflowY: 'auto', // Allow scrolling vertically
+                        '&::-webkit-scrollbar': {
+                            display: 'none', // Hide scrollbar
+                        },
+                    }}
+                >
+                    <Typography variant="subtitle2" color="gray" gutterBottom>
+                        Latest Comments
+                    </Typography>
                     <Divider sx={{ bgcolor: '#333' }} />
                     {[1, 2].map((i) => (
                         <Box key={i} display="flex" alignItems="flex-start" mt={2} gap={1}>
@@ -231,6 +256,12 @@ export default function AgentDetailPage() {
                     ))}
                 </Box>
             </Box>
+
+
+            <AgentPopup open={popupOpen} handleClose={() => setPopupOpen(false)} />
         </Box>
     );
 }
+
+
+
