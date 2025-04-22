@@ -5,15 +5,13 @@ import {
   Button,
   TextField,
   Typography,
-  ToggleButtonGroup,
-  ToggleButton,
   InputAdornment,
   Divider,
 } from "@mui/material";
 
 export default function LaunchTokenPage() {
-  const [chain, setChain] = React.useState("solana");
-  const [dex, setDex] = React.useState("raydium");
+  // const [chain, setChain] = React.useState("solana");
+  // const [dex, setDex] = React.useState("raydium");
 
   const commonTextFieldStyles = {
     "& .MuiInputBase-input": { color: "white" },
@@ -32,7 +30,7 @@ export default function LaunchTokenPage() {
       </Typography>
 
       {/* Chain */}
-      <Box sx={{ mb: 3 }}>
+      {/* <Box sx={{ mb: 3 }}>
         <Typography sx={{ mb: 1 }}>Choose a chain</Typography>
         <ToggleButtonGroup
           value={chain}
@@ -57,10 +55,10 @@ export default function LaunchTokenPage() {
           <ToggleButton value="solana">Solana</ToggleButton>
           <ToggleButton value="base">Base</ToggleButton>
         </ToggleButtonGroup>
-      </Box>
+      </Box> */}
 
       {/* DEX */}
-      <Box sx={{ mb: 3 }}>
+      {/* <Box sx={{ mb: 3 }}>
         <Typography sx={{ mb: 1 }}>Choose a DEX</Typography>
         <ToggleButtonGroup
           value={dex}
@@ -85,7 +83,7 @@ export default function LaunchTokenPage() {
           <ToggleButton value="raydium">Raydium</ToggleButton>
           <ToggleButton value="meteora">Meteora</ToggleButton>
         </ToggleButtonGroup>
-      </Box>
+      </Box> */}
 
       {/* Token Info */}
       <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
@@ -113,7 +111,7 @@ export default function LaunchTokenPage() {
         <TextField
           fullWidth
           label="Website"
-          defaultValue="https://meme-frontend"
+          defaultValue=""
           variant="outlined"
           sx={commonTextFieldStyles}
         />
@@ -166,7 +164,7 @@ export default function LaunchTokenPage() {
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              <Typography sx={{ color: "white" }}>SOL</Typography>
+              <Typography sx={{ color: "white" }}>HBAR</Typography>
             </InputAdornment>
           ),
           style: { color: "white" },

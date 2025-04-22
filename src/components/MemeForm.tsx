@@ -28,6 +28,7 @@ const fieldSx = {
 export default function MemeForm({ onBack }: { onBack: () => void }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [image, setImage] = useState<string | null>(null);
+  const [description, setDescription] = useState("");
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -92,15 +93,27 @@ export default function MemeForm({ onBack }: { onBack: () => void }) {
       {/* Description */}
       <TextField
         fullWidth
-        label="Description 0/200"
+        label={`Description ${description.length}/200`}
         placeholder="Description"
         variant="outlined"
         multiline
         rows={4}
+        value={description}
+        onChange={(e) => {
+          const value = e.target.value;
+          if (value.length <= 200) {
+            setDescription(value);
+          }
+        }}
+        error={description.length === 200}
+        helperText={
+          description.length === 200
+            ? "You've reached the 200 character limit."
+            : ""
+        }
         InputLabelProps={{ shrink: true }}
         sx={fieldSx}
       />
-  
 
 
       {/* Create & Back buttons */}

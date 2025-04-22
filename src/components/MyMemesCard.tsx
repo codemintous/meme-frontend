@@ -1,29 +1,67 @@
 "use client";
 
 import React, { useState } from "react";
-import { Box, Typography, Button, Card, CardContent, CardMedia, IconButton, Menu, MenuItem } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Button,
+  Card,
+  CardContent,
+  CardMedia,
+  IconButton,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+} from "@mui/material";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { useRouter } from "next/navigation";
-const MyMemesCard = ({ title, description, image, memeId }: { title: string; description: string; image?: string; memeId: string }) => {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null); // State to manage the menu anchor
-  const router = useRouter()
+
+const MyMemesCard = ({
+  title,
+  description,
+  image,
+  memeId,
+}: {
+  title: string;
+  description: string;
+  image?: string;
+  memeId: string;
+}) => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const router = useRouter();
+
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget); // Open the menu when the three dots are clicked
+    setAnchorEl(event.currentTarget);
   };
 
   const handleMenuClose = () => {
-    setAnchorEl(null); // Close the menu
+    setAnchorEl(null);
   };
 
   const handleEdit = () => {
-    router.push(`/edit/${memeId}`); // Navigate to the edit page for this meme
-    handleMenuClose(); // Close the menu
+    router.push(`/edit/${memeId}`);
+    handleMenuClose();
+  };
+
+  const handleTalkToMeme = () => {
+    router.push(`/${memeId}`);
+    handleMenuClose();
+  };
+
+  const handleDelete = () => {
+    // Optional: confirm before delete
+    console.log(`Delete meme with ID: ${memeId}`);
+    handleMenuClose();
   };
 
   const handleLaunch = () => {
     router.push(`/launchtoken`);
-  }
+  };
 
   return (
     <Card
@@ -44,13 +82,25 @@ const MyMemesCard = ({ title, description, image, memeId }: { title: string; des
         <IconButton sx={{ color: "gray" }} onClick={handleMenuClick}>
           <MoreVertIcon />
         </IconButton>
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={handleMenuClose}
-        >
-          <MenuItem onClick={handleEdit}>Edit</MenuItem>
-          <MenuItem>Delete</MenuItem>
+        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
+          <MenuItem onClick={handleTalkToMeme}>
+            <ListItemIcon>
+              <ChatBubbleOutlineIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Talk to Meme</ListItemText>
+          </MenuItem>
+          <MenuItem onClick={handleEdit}>
+            <ListItemIcon>
+              <EditIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Edit</ListItemText>
+          </MenuItem>
+          <MenuItem onClick={handleDelete}>
+            <ListItemIcon>
+              <DeleteOutlineIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Delete</ListItemText>
+          </MenuItem>
         </Menu>
       </Box>
 

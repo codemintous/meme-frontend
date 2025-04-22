@@ -17,10 +17,15 @@ import {
   Add as AddIcon,
   ContentCopy as CopyIcon,
 } from '@mui/icons-material';
+import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
+import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import TelegramIcon from '@mui/icons-material/Telegram';
 import TwitterIcon from '@mui/icons-material/X';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import ImageUploadSection from '@/components/ImageUploadSection';
+import { useRouter } from 'next/navigation';
+import { useParams } from "next/navigation";
+import TokenInfo from '@/components/TokenInfo';
 
 const categories = ['Meme', 'DeFi', 'NFT', 'Utility'];
 
@@ -55,6 +60,11 @@ export default function EditPage() {
   const [avatarImage, setAvatarImage] = React.useState<string | null>(null);
   const [bgImage, setBgImage] = React.useState<string | null>(null);
 
+  const router = useRouter();
+  const params = useParams();
+  const memeId = params?.memeId;
+  console.log("memeid in edit for navigate to chat....", memeId);
+
   const handleImageUpload = (
     event: React.ChangeEvent<HTMLInputElement>,
     type: 'avatar' | 'background'
@@ -79,216 +89,272 @@ export default function EditPage() {
         Dashboard
       </Typography>
 
-      <Tabs
-        value={tab}
-        onChange={(e, newVal) => setTab(newVal)}
-        sx={{ mb: 4 }}
-        textColor="inherit"
-        indicatorColor="primary"
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 4,
+          flexWrap: "wrap", // optional for responsiveness
+          gap: 2,
+        }}
       >
-        <Tab label="Main info" />
-        <Tab label="Visual Representation" />
-        <Tab label="Token infos" />
-      </Tabs>
+        {/* Tabs Section */}
+        <Tabs
+          value={tab}
+          onChange={(e, newVal) => setTab(newVal)}
+          textColor="inherit"
+          indicatorColor="primary"
+          sx={{ flexShrink: 1 }}
+        >
+          <Tab label="Main info" />
+          <Tab label="Visual Representation" />
+          <Tab label="Token infos" />
+        </Tabs>
+
+        {/* Buttons Section */}
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <Button
+            variant="outlined"
+            startIcon={<RocketLaunchIcon />}
+            sx={{
+              textTransform: "none",
+              color: "white",
+              borderColor: "gray",
+              borderRadius: 2,
+              fontWeight: 500,
+              ":hover": {
+                borderColor: "#aaa",
+                backgroundColor: "rgba(255,255,255,0.05)",
+              },
+            }}
+            onClick={()=>{
+              router.push('/launchpad');
+            }}
+          >
+            Launch
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<ChatBubbleOutlineIcon />}
+            sx={{
+              textTransform: "none",
+              color: "white",
+              borderColor: "gray",
+              borderRadius: 2,
+              fontWeight: 500,
+              ":hover": {
+                borderColor: "#aaa",
+                backgroundColor: "rgba(255,255,255,0.05)",
+              },
+            }}
+            onClick={()=>{
+              router.push(`/${memeId}`);
+            }}
+          >
+            Chat
+          </Button>
+        </Box>
+      </Box>
 
       {tab === 0 && (
-   <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} gap={4} width="100%">
-   {/* LEFT SECTION */}
+        <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} gap={4} width="100%">
+          {/* LEFT SECTION */}
 
 
 
 
-   <Box flex={1}>
-     <Typography variant="h6" gutterBottom>
-       Main info
-     </Typography>
+          <Box flex={1}>
+            <Typography variant="h6" gutterBottom>
+              Main info
+            </Typography>
 
-     {/* Card with Background Image */}
-     <Box
-       sx={{
-         bgcolor: '#1e1e1e',
-         borderRadius: 2,
-         p: 2,
-         position: 'relative',
-         minHeight: 160,
-         mb: 6,
-         backgroundImage: bgImage ? `url(${bgImage})` : undefined,
-         backgroundSize: 'cover',
-         backgroundPosition: 'center',
-       }}
-     >
-       {/* Edit Background Button */}
-       <IconButton
-         component="label"
-         sx={{ position: 'absolute', top: 8, right: 8 }}
-       >
-         <EditIcon sx={{ color: 'white' }} />
-         <input
-           type="file"
-           accept="image/*"
-           hidden
-           onChange={(e) => handleImageUpload(e, 'background')}
-         />
-       </IconButton>
+            {/* Card with Background Image */}
+            <Box
+              sx={{
+                bgcolor: '#1e1e1e',
+                borderRadius: 2,
+                p: 2,
+                position: 'relative',
+                minHeight: 160,
+                mb: 6,
+                backgroundImage: bgImage ? `url(${bgImage})` : undefined,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            >
+              {/* Edit Background Button */}
+              <IconButton
+                component="label"
+                sx={{ position: 'absolute', top: 8, right: 8 }}
+              >
+                <EditIcon sx={{ color: 'white' }} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(e) => handleImageUpload(e, 'background')}
+                />
+              </IconButton>
 
-       {/* Avatar */}
-       <Box
-         sx={{
-           position: 'absolute',
-           bottom: -30,
-           left: '50%',
-           transform: 'translateX(-50%)',
-         }}
-       >
-         <Avatar
-           src={avatarImage || undefined}
-           sx={{ width: 60, height: 60, bgcolor: '#444' }}
-         />
-         <IconButton
-           component="label"
-           sx={{
-             bgcolor: '#2c2c2c',
-             position: 'absolute',
-             right: -10,
-             bottom: -10,
-             p: 0.5,
-           }}
-         >
-           <EditIcon fontSize="small" sx={{ color: 'white' }} />
-           <input
-             type="file"
-             accept="image/*"
-             hidden
-             onChange={(e) => handleImageUpload(e, 'avatar')}
-           />
-         </IconButton>
-       </Box>
-     </Box>
+              {/* Avatar */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  bottom: -30,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                }}
+              >
+                <Avatar
+                  src={avatarImage || undefined}
+                  sx={{ width: 60, height: 60, bgcolor: '#444' }}
+                />
+                <IconButton
+                  component="label"
+                  sx={{
+                    bgcolor: '#2c2c2c',
+                    position: 'absolute',
+                    right: -10,
+                    bottom: -10,
+                    p: 0.5,
+                  }}
+                >
+                  <EditIcon fontSize="small" sx={{ color: 'white' }} />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(e) => handleImageUpload(e, 'avatar')}
+                  />
+                </IconButton>
+              </Box>
+            </Box>
 
-     {/* Name & Category */}
-     <Box display="flex" gap={2} sx={{ mb: 2 }}>
-       <TextField
-         fullWidth
-         label="Name"
-         defaultValue=""
-         required
-         sx={textFieldStyles}
-       />
-       <TextField
-         select
-         fullWidth
-         label="Category"
-         defaultValue=""
-         sx={textFieldStyles}
-         InputProps={{ sx: { color: 'white' } }}
-       >
-         {categories.map((cat) => (
-           <MenuItem key={cat} value={cat}>
-             {cat}
-           </MenuItem>
-         ))}
-       </TextField>
-     </Box>
+            {/* Name & Category */}
+            <Box display="flex" gap={2} sx={{ mb: 2 }}>
+              <TextField
+                fullWidth
+                label="Name"
+                defaultValue=""
+                required
+                sx={textFieldStyles}
+              />
+              <TextField
+                select
+                fullWidth
+                label="Category"
+                defaultValue=""
+                sx={textFieldStyles}
+                InputProps={{ sx: { color: 'white' } }}
+              >
+                {categories.map((cat) => (
+                  <MenuItem key={cat} value={cat}>
+                    {cat}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Box>
 
-     {/* Description */}
-     <TextField
-       label="Description"
-       placeholder="Description"
-       multiline
-       fullWidth
-       rows={3}
-       inputProps={{ maxLength: 200 }}
-       sx={{ mb: 2, ...textFieldStyles }}
-     />
+            {/* Description */}
+            <TextField
+              label="Description"
+              placeholder="Description"
+              multiline
+              fullWidth
+              rows={3}
+              inputProps={{ maxLength: 200 }}
+              sx={{ mb: 2, ...textFieldStyles }}
+            />
 
-     {/* Personality */}
-     <TextField
-       fullWidth
-       multiline
-       rows={4}
-       label="Personality"
-       placeholder="Enter custom personality here"
-       sx={{ mb: 2, ...textFieldStyles }}
-     />
+            {/* Personality */}
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              label="Personality"
+              placeholder="Enter custom personality here"
+              sx={{ mb: 2, ...textFieldStyles }}
+            />
 
-     {/* Templates Button */}
-     <Box textAlign="right">
-       <Button variant="contained" sx={{ bgcolor: '#875CFF', textTransform: 'none' }}>
-         Templates
-       </Button>
-     </Box>
-   </Box>
+            {/* Templates Button */}
+            <Box textAlign="right">
+              <Button variant="contained" sx={{ bgcolor: '#875CFF', textTransform: 'none' }}>
+                Templates
+              </Button>
+            </Box>
+          </Box>
 
-   {/* RIGHT SECTION - SOCIALS */}
-   <Box flex={1}>
-     <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-       <Typography variant="h6">Social Infos</Typography>
-       <IconButton sx={{ color: 'white' }}>
-         <AddIcon />
-       </IconButton>
-     </Box>
+          {/* RIGHT SECTION - SOCIALS */}
+          <Box flex={1}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+              <Typography variant="h6">Social Infos</Typography>
+              <IconButton sx={{ color: 'white' }}>
+                <AddIcon />
+              </IconButton>
+            </Box>
 
-     {[{ icon: <TwitterIcon />, label: 'X', placeholder: 'https://x.com/undefined' },
-     { icon: <TelegramIcon />, label: 'Telegram', placeholder: 'https://t.me/undefined' },
-     { icon: <InstagramIcon />, label: 'Instagram', placeholder: 'https://instagram.com/undefined' },
-     ].map((social, index) => (
-       <Box key={index} sx={{ mb: 2 }}>
-         <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-           {social.label}
-         </Typography>
-         <TextField
-           fullWidth
-           placeholder={social.placeholder}
-           InputProps={{
-             startAdornment: (
-               <InputAdornment position="start">{social.icon}</InputAdornment>
-             ),
-           }}
-           sx={textFieldStyles}
-         />
-       </Box>
-     ))}
+            {[{ icon: <TwitterIcon />, label: 'X', placeholder: 'https://x.com/undefined' },
+            { icon: <TelegramIcon />, label: 'Telegram', placeholder: 'https://t.me/undefined' },
+            { icon: <InstagramIcon />, label: 'Instagram', placeholder: 'https://instagram.com/undefined' },
+            ].map((social, index) => (
+              <Box key={index} sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+                  {social.label}
+                </Typography>
+                <TextField
+                  fullWidth
+                  placeholder={social.placeholder}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">{social.icon}</InputAdornment>
+                    ),
+                  }}
+                  sx={textFieldStyles}
+                />
+              </Box>
+            ))}
 
-     {/* My Memes Link */}
-     <Box mt={4}>
-       <Typography variant="subtitle2" gutterBottom>
-         My Memes link
-       </Typography>
-       <TextField
-         fullWidth
-         InputProps={{
-           startAdornment: (
-             <InputAdornment position="start">
-               <Avatar sx={{ width: 24, height: 24, bgcolor: '#333' }} />
-             </InputAdornment>
-           ),
-           endAdornment: (
-             <InputAdornment position="end">
-               <IconButton sx={{ color: 'white' }}>
-                 <CopyIcon fontSize="small" />
-               </IconButton>
-             </InputAdornment>
-           ),
-         }}
-         sx={textFieldStyles}
-       />
-       <Typography variant="caption" sx={{ color: '#aaa', mt: 0.5 }}>
-         https://meme-frontend
-       </Typography>
-     </Box>
-   </Box>
- </Box>
+            {/* My Memes Link */}
+            <Box mt={4}>
+              <Typography variant="subtitle2" gutterBottom>
+                My Memes link
+              </Typography>
+              <TextField
+                fullWidth
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Avatar sx={{ width: 24, height: 24, bgcolor: '#333' }} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton sx={{ color: 'white' }}>
+                        <CopyIcon fontSize="small" />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+                sx={textFieldStyles}
+              />
+              <Typography variant="caption" sx={{ color: '#aaa', mt: 0.5 }}>
+                https://meme-frontend
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+      )}
+
+
+
+      {tab === 1 && (
+        <ImageUploadSection />
+      )}
+
+      {tab === 2 && (
+        <TokenInfo/>
 )}
-
-     
-
-{tab === 1 && (
-  <ImageUploadSection />
-)}
-
-{/* {tab === 2 && (
-  // Your Token Infos Section (you can fill this in later)
-)} */}
 
 
 

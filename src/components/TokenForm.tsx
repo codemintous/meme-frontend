@@ -10,6 +10,9 @@ import {
   Avatar,
 } from '@mui/material';
 
+import { usePathname } from "next/navigation";
+
+
 type TokenFormProps = {
   onBack: () => void; // specify that it's a function that returns nothing
 };
@@ -18,6 +21,9 @@ type TokenFormProps = {
 const chains = ['Solana', 'Ethereum', 'Polygon'];
 
 const TokenForm = ({ onBack }: TokenFormProps) => {
+  const pathname = usePathname();
+
+  
   return (
     <Box>
       <Typography variant="h4" fontWeight="bold" gutterBottom>
@@ -118,14 +124,21 @@ const TokenForm = ({ onBack }: TokenFormProps) => {
         >
           Yes, this is my token
         </Button>
+        {pathname === "/creatememe" && (
         <Button
           variant="outlined"
           fullWidth
-          sx={{ borderColor: 'white', color: 'white', '&:hover': { borderColor: '#aaa' } }}
+          sx={{
+            borderColor: "white",
+            color: "white",
+            "&:hover": { borderColor: "#aaa" },
+            mt: 2,
+          }}
           onClick={onBack}
         >
           Back
         </Button>
+      )}
       </Stack>
     </Box>
   );

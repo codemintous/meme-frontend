@@ -13,13 +13,18 @@ import {
     Menu,
     MenuItem,
     Paper,
+    Stack
 } from '@mui/material';
 import { useState } from 'react';
 import Image from 'next/image';
 import SendIcon from '@mui/icons-material/Send';
-import { Info } from '@mui/icons-material';
+import { Info , Edit } from '@mui/icons-material';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import AgentPopup from '@/components/AgentPopup';
+import { useRouter } from 'next/navigation';
+import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
+import { useParams } from "next/navigation";
+
 
 export default function AgentDetailPage() {
     const [tab, setTab] = useState(0);
@@ -27,7 +32,11 @@ export default function AgentDetailPage() {
     const [inputValue, setInputValue] = useState('');
     const [messages, setMessages] = useState<{ text: string, sender: 'user' | 'bot' }[]>([]);
     const open = Boolean(anchorEl);
+ const router = useRouter();
+   const params = useParams();
+   const agentId = params?.agentId;
 
+ 
     const [popupOpen, setPopupOpen] = useState(false);
 
     const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
@@ -71,19 +80,32 @@ export default function AgentDetailPage() {
                             <Typography variant="body2" color="gray">The Biggest Brain in Crypto.</Typography>
                         </Box>
                     </Box>
+                    <Stack direction="row" spacing={1}>
                     <IconButton
                         sx={{
-
                             color: 'white',
-                            borderRadius: '8px',
-                            width: 48,
-                            height: 48,
                         }}
                         onClick={() => setPopupOpen(true)}
                     >
                         <Info />
                     </IconButton>
+                    <IconButton
+                       sx={{ color: 'white',}}
+                       onClick={() => { router.push(`/launchpad`)}}
+                   >
+                       <RocketLaunchIcon />
+                   </IconButton>
+                   <IconButton
+                       sx={{ color: 'white',}}
+                       onClick={()=> {
+                        router.push(`/edit/${agentId}`)
+                       }}
+                   >
+                       <Edit />
+                   </IconButton>
+                    </Stack>
                 </Box>
+
 
 
                 {/* Chat Area */}
