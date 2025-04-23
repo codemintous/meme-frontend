@@ -230,14 +230,16 @@ const uploadToPinata = async (file: File): Promise<string> => {
       </Typography>
       <TextField
         fullWidth
+        type="number"
         placeholder="0"
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              <Typography sx={{ color: "white" }}>HBAR</Typography>
+              <Typography sx={{ color: 'white' }}>HBAR</Typography>
             </InputAdornment>
           ),
-          style: { color: "white" },
+          style: { color: 'white' },
+          inputMode: 'numeric', // enhances mobile input UX
         }}
         sx={{ mb: 1, ...commonTextFieldStyles }}
       />
