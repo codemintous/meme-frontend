@@ -31,7 +31,7 @@ export default function AgentDetailPage() {
     const [tab, setTab] = useState(0);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [inputValue, setInputValue] = useState('');
-    const [messages, setMessages] = useState<{ text: string, sender: 'user' | 'bot' }[]>([]);
+    const [messages, setMessages] = useState<{ text: string; sender: 'user' | 'bot' | 'loading' }[]>([]);
     const open = Boolean(anchorEl);
     const router = useRouter();
     const params = useParams();
@@ -52,22 +52,30 @@ export default function AgentDetailPage() {
     const handleMenuClose = () => {
         setAnchorEl(null);
     };
-
     const handleSend = () => {
         if (inputValue.trim()) {
-            const newMessages: { text: string; sender: 'user' | 'bot' }[] = [
-                ...messages,
-                { text: inputValue, sender: 'user' }
-            ];
-            setMessages(newMessages);
-            setInputValue('');
-
-            // Simulate bot response
-            setTimeout(() => {
-                setMessages((prev) => [...prev, { text: "I'm BigBrainPepe, here's your response!", sender: 'bot' }]);
-            }, 800);
+          const userMessage: { text: string; sender: 'user' } = {
+            text: inputValue,
+            sender: 'user',
+          };
+          const loadingMessage: { text: string; sender: 'loading' } = {
+            text: '',
+            sender: 'loading',
+          };
+      
+          setMessages([...messages, userMessage, loadingMessage]);
+          setInputValue('');
+      
+          setTimeout(() => {
+            setMessages((prev) => [
+              ...prev.slice(0, -1), // Remove loading message
+              { text: "I'm BigBrainPepe, here's your response!", sender: 'bot' },
+            ]);
+          }, 800);
         }
-    };
+      };
+      
+    
 
     return (
         <Box display="flex" flexDirection="row" height="100vh">
@@ -133,29 +141,50 @@ export default function AgentDetailPage() {
 
                 {/* Chat Area */}
                 <Box flexGrow={1} overflow="auto" px={1}>
-                    {messages.map((msg, i) => (
-                        <Box
-                            key={i}
-                            display="flex"
-                            justifyContent={msg.sender === 'user' ? 'flex-end' : 'flex-start'}
-                            mb={1}
-                        >
-                            <Paper
+    {messages.map((msg, i) => (
+        <Box
+            key={i}
+            display="flex"
+            justifyContent={msg.sender === 'user' ? 'flex-end' : 'flex-start'}
+            mb={1}
+        >
+            <Paper
+                sx={{
+                    p: 1.5,
+                    px: 2,
+                    maxWidth: '70%',
+                    borderRadius: 4,
+                    backgroundColor: msg.sender === 'user' ? '#9333ea' : '#27272a',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                }}
+                elevation={2}
+            >
+                {msg.sender === 'loading' ? (
+                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                        {[...Array(3)].map((_, j) => (
+                            <Box
+                                key={j}
                                 sx={{
-                                    p: 1.5,
-                                    px: 2,
-                                    maxWidth: '70%',
-                                    borderRadius: 4,
-                                    backgroundColor: msg.sender === 'user' ? '#9333ea' : '#27272a',
-                                    color: 'white'
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: '50%',
+                                    backgroundColor: 'white',
+                                    animation: `bounce 1.4s infinite`,
+                                    animationDelay: `${j * 0.2}s`
                                 }}
-                                elevation={2}
-                            >
-                                {msg.text}
-                            </Paper>
-                        </Box>
-                    ))}
-                </Box>
+                            />
+                        ))}
+                    </Box>
+                ) : (
+                    msg.text
+                )}
+            </Paper>
+        </Box>
+    ))}
+</Box>
+
 
                 {/* Prompt & Chat Input */}
                 <Box mt={2} display="flex" gap={1} alignItems="center">
