@@ -122,12 +122,12 @@ const Sidebar = () => {
               <Typography>Explore</Typography>
             </StyledLink>
           </NavItem>
-          <NavItem disablePadding>
+          {/* <NavItem disablePadding>
             <StyledLink href="/trending">
               <TrendingUp size={20} />
               <Typography>Trending</Typography>
             </StyledLink>
-          </NavItem>
+          </NavItem> */}
           <NavItem disablePadding>
             <StyledLink href="/my-memes">
               <UsersRound size={20} />
