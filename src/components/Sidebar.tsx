@@ -122,12 +122,7 @@ const Sidebar = () => {
               <Typography>Explore</Typography>
             </StyledLink>
           </NavItem>
-          {/* <NavItem disablePadding>
-            <StyledLink href="/trending">
-              <TrendingUp size={20} />
-              <Typography>Trending</Typography>
-            </StyledLink>
-          </NavItem> */}
+         
           <NavItem disablePadding>
             <StyledLink href="/my-memes">
               <UsersRound size={20} />
@@ -144,6 +139,12 @@ const Sidebar = () => {
             <StyledLink href="/rankings">
               <Trophy size={20} />
               <Typography>Rankings</Typography>
+            </StyledLink>
+          </NavItem>
+          <NavItem disablePadding>
+            <StyledLink href="/trending">
+              <TrendingUp size={20} />
+              <Typography>Trending</Typography>
             </StyledLink>
           </NavItem>
           <NavItem disablePadding>
