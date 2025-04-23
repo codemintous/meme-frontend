@@ -1,0 +1,159 @@
+{
+    "trendingAgents": [
+      {
+        "id": "1",
+        "name": "The Nutting Professor",
+        "category": "Science",
+        "chain": "PRONUT",
+        "image": "/agents/meme1.png",
+        "description": "Trust me, you don't want to run into The Nutting Professor after the last bell rings!"
+      },
+      {
+        "id": "2",
+        "name": "ClapCat",
+        "category": "Gaming",
+        "chain": "SCLAP",
+        "image": "/agents/meme2.png",
+        "description": "Sister to the famous $POPCAT"
+      },
+      {
+        "id": "3",
+        "name": "Akita",
+        "category": "Dogs",
+        "chain": "DOGS",
+        "image": "/agents/meme3.png",
+        "description": "Akita"
+      },
+      {
+        "id": "4",
+        "name": "Non-Playable Coin",
+        "category": "Gaming",
+        "chain": "NPC/ETHEREUM",
+        "image": "/agents/meme4.jpeg",
+        "description": "A meme for every 🤖 on Earth"
+      },
+      {
+        "id": "5",
+        "name": "Beaver",
+        "category": "Animals",
+        "chain": "DAM/SUI",
+        "image": "/agents/meme5.jpeg",
+        "description": "You are Beaver AI Ambassador, the friendly ambassador and human's chat"
+      },
+      {
+        "id": "6",
+        "name": "Beaver1",
+        "category": "Animals",
+        "chain": "DAM/SUI",
+        "image": "/agents/meme5.jpeg",
+        "description": "You are Beaver AI Ambassador, the friendly ambassador and human's chat"
+      },
+      {
+        "id": "7",
+        "name": "Beaver2",
+        "category": "Animals",
+        "chain": "DAM/SUI",
+        "image": "/agents/meme5.jpeg",
+        "description": "You are Beaver AI Ambassador, the friendly ambassador and human's chat"
+      },
+      {
+        "id": "8",
+        "name": "Beaver3",
+        "category": "Animals",
+        "chain": "DAM/SUI",
+        "image": "/agents/meme5.jpeg",
+        "description": "You are Beaver AI Ambassador, the friendly ambassador and human's chat"
+      }
+    ],
+    "trendingTokens": [
+      {
+        "name": "The Nutting Professor",
+        "symbol": "PRONUT",
+        "chain": "Solana",
+        "marketCap": "913.02K",
+        "lastHour": "-",
+        "image": "/agents/meme1.png"
+      },
+      {
+        "name": "ClapCat",
+        "symbol": "SCLAP",
+        "chain": "Solana",
+        "marketCap": "883.57K",
+        "lastHour": "-",
+        "image": "/agents/meme2.png"
+      },
+      {
+        "name": "Kolt",
+        "symbol": "SKOLT",
+        "chain": "Solana",
+        "marketCap": "30.82K",
+        "lastHour": "-",
+        "image": "/agents/meme3.png"
+      },
+      {
+        "name": "Non-Playable Coin",
+        "symbol": "NPC",
+        "chain": "Ethereum",
+        "marketCap": "104.25M",
+        "lastHour": "0.33",
+        "image": "/agents/meme4.jpeg"
+      },
+      {
+        "name": "Hana",
+        "symbol": "HANA",
+        "chain": "Ethereum",
+        "marketCap": "883.57K",
+        "lastHour": "-",
+        "image": "/agents/meme2.png"
+      },
+      {
+        "name": "Kitten",
+        "symbol": "KHAI",
+        "chain": "Solana",
+        "marketCap": "883.57K",
+        "lastHour": "-",
+        "image": "/agents/meme2.png"
+      },
+      {
+        "name": "NPC Blue",
+        "symbol": "NPCS",
+        "chain": "Solana",
+        "marketCap": "883.57K",
+        "lastHour": "-",
+        "image": "/agents/meme2.png"
+      }
+    ],
+    "latestMemes": [
+      {
+        "id": 1,
+        "title": "Poncho cat vs Crypto Bear",
+        "image": "/agents/latestmeme1.png",
+        "creator": {
+          "name": "PonchAI",
+          "avatar": "/agents/meme1.png"
+        },
+        "votes": 23
+      },
+      {
+        "id": 2,
+        "title": "Not Financial Advice",
+        "image": "/agents/latestmeme2.png",
+        "creator": {
+          "name": "AnonInvestor",
+          "avatar": "/agents/meme2.png"
+        },
+        "votes": 41
+      },
+      {
+        "id": 3,
+        "title": "Not Financial Advice",
+        "image": "/agents/latestmeme3.png",
+        "creator": {
+          "name": "AnonInvestor",
+          "avatar": "/agents/meme3.png"
+        },
+        "votes": 41
+      }
+    ]
+  }
+  
