@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -7,11 +7,85 @@ import {
   Typography,
   InputAdornment,
   Divider,
+  IconButton,
 } from "@mui/material";
+import axios from "axios";
+import { Close, CloudUpload } from "@mui/icons-material";
+import Image from "next/image";
 
 export default function LaunchTokenPage() {
   // const [chain, setChain] = React.useState("solana");
   // const [dex, setDex] = React.useState("raydium");
+
+  const [iconImage, setIconImage] = useState<string | null>(null);
+  const [bannerImage, setBannerImage] = useState<string | null>(null);
+
+
+  const iconInputRef = React.useRef<HTMLInputElement>(null);
+const bannerInputRef = React.useRef<HTMLInputElement>(null);
+
+const handleUploadClick = (type: "icon" | "banner") => {
+  const inputRef = type === "icon" ? iconInputRef : bannerInputRef;
+  inputRef.current?.click();
+};
+
+const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: "icon" | "banner") => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  const previewUrl = URL.createObjectURL(file); // ✅ local preview
+
+  if (type === "icon") {
+    setIconImage(previewUrl);
+  } else {
+    setBannerImage(previewUrl);
+  }
+
+  try {
+    const ipfsHash = await uploadToPinata(file);
+    console.log("Uploaded to IPFS:", ipfsHash);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+
+const uploadToPinata = async (file: File): Promise<string> => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const metadata = JSON.stringify({
+    name: "AgentImage",
+    keyvalues: { uploadedBy: "AgentBuilder" },
+  });
+  formData.append("pinataMetadata", metadata);
+
+  const options = JSON.stringify({ cidVersion: 1 });
+  formData.append("pinataOptions", options);
+
+  try {
+    const response = await axios.post(
+      "https://api.pinata.cloud/pinning/pinFileToIPFS",
+      formData,
+      {
+        maxBodyLength: Infinity,
+        headers: {
+          "Content-Type": "multipart/form-data",
+          pinata_api_key: `${process.env.NEXT_PUBLIC_PINATA_API_KEY}`,
+          pinata_secret_api_key: `${process.env.NEXT_PUBLIC_PINATA_API_SECRET}`,
+        },
+      }
+    );
+
+    return `https://gateway.pinata.cloud/ipfs/${response.data.IpfsHash}`;
+  } catch (error) {
+    console.error("Error uploading to Pinata:", error);
+    throw new Error("Failed to upload image");
+  }
+};
+
+
+
 
   const commonTextFieldStyles = {
     "& .MuiInputBase-input": { color: "white" },
@@ -28,62 +102,6 @@ export default function LaunchTokenPage() {
       <Typography variant="h6" sx={{ mb: 3 }}>
         Launch Token on Solana
       </Typography>
-
-      {/* Chain */}
-      {/* <Box sx={{ mb: 3 }}>
-        <Typography sx={{ mb: 1 }}>Choose a chain</Typography>
-        <ToggleButtonGroup
-          value={chain}
-          exclusive
-          onChange={(e, val) => val && setChain(val)}
-          sx={{
-            "& .MuiToggleButton-root": {
-              color: "white",
-              border: "1px solid gray",
-              borderRadius: 2,
-              px: 3,
-              mr: 2,
-              textTransform: "none",
-              "&.Mui-selected": {
-                borderColor: "#7f5af0",
-                backgroundColor: "#1e1e1e",
-                color: "white",
-              },
-            },
-          }}
-        >
-          <ToggleButton value="solana">Solana</ToggleButton>
-          <ToggleButton value="base">Base</ToggleButton>
-        </ToggleButtonGroup>
-      </Box> */}
-
-      {/* DEX */}
-      {/* <Box sx={{ mb: 3 }}>
-        <Typography sx={{ mb: 1 }}>Choose a DEX</Typography>
-        <ToggleButtonGroup
-          value={dex}
-          exclusive
-          onChange={(e, val) => val && setDex(val)}
-          sx={{
-            "& .MuiToggleButton-root": {
-              color: "white",
-              border: "1px solid gray",
-              borderRadius: 2,
-              px: 3,
-              mr: 2,
-              textTransform: "none",
-              "&.Mui-selected": {
-                borderColor: "#7f5af0",
-                color: "white",
-                backgroundColor: "#1e1e1e",
-              },
-            },
-          }}
-        >
-          <ToggleButton value="raydium">Raydium</ToggleButton>
-          <ToggleButton value="meteora">Meteora</ToggleButton>
-        </ToggleButtonGroup>
-      </Box> */}
 
       {/* Token Info */}
       <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
@@ -120,35 +138,87 @@ export default function LaunchTokenPage() {
 
       {/* Uploads */}
       <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-        <Box
-          sx={{
-            border: "1px solid gray",
-            borderRadius: 2,
-            width: "50%",
-            height: 100,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "gray",
-          }}
-        >
-          Upload Icon
-        </Box>
-        <Box
-          sx={{
-            border: "1px solid gray",
-            borderRadius: 2,
-            width: "50%",
-            height: 100,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "gray",
-          }}
-        >
-          Upload Banner
-        </Box>
-      </Box>
+      {["icon", "banner"].map((type) => {
+        const image = type === "icon" ? iconImage : bannerImage;
+        const inputRef = type === "icon" ? iconInputRef : bannerInputRef;
+
+        return (
+          <Box
+            key={type}
+            onClick={() => !image && handleUploadClick(type as "icon" | "banner")}
+            sx={{
+              position: "relative",
+              border: "1px solid #ccc",
+              borderRadius: 2,
+              width: "50%",
+              height: 120,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              overflow: "hidden",
+              cursor: image ? "default" : "pointer",
+            }}
+          >
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(e) => handleFileChange(e, type as "icon" | "banner")}
+            />
+            {image ? (
+              <>
+<Image
+  src={image}
+  alt={`${type} preview`}
+  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+  fill
+  unoptimized
+/>
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (type === "icon") {
+                      setIconImage(null);
+                    } else {
+                      setBannerImage(null);
+                    }
+                  }}
+                  
+                  sx={{
+                    position: "absolute",
+                    top: 4,
+                    right: 4,
+                    backgroundColor: "rgba(0, 0, 0, 0.6)",
+                    color: "#fff",
+                    zIndex: 1,
+                  }}
+                >
+                  <Close fontSize="small" />
+                </IconButton>
+              </>
+            ) : (
+              <Box
+                sx={{
+                  textAlign: "center",
+                  color: "#888",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                <CloudUpload />
+                <Typography variant="body2" mt={1}>
+                  Upload {type === "icon" ? "Icon" : "Banner"}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        );
+      })}
+    </Box>
+
 
       {/* Initial Buy */}
       <Divider sx={{ borderColor: "gray", mb: 2 }} />
