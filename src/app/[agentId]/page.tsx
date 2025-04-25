@@ -18,20 +18,22 @@ import {
 import { useState } from 'react';
 import Image from 'next/image';
 import SendIcon from '@mui/icons-material/Send';
-import { Info, Edit } from '@mui/icons-material';
+import { Info, Edit, ContentCopy } from '@mui/icons-material';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import AgentPopup from '@/components/AgentPopup';
 import { useRouter } from 'next/navigation';
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import { useParams } from "next/navigation";
 import Link from 'next/link';
+import VideoIcon from '@mui/icons-material/VideoCall';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 
 export default function AgentDetailPage() {
     const [tab, setTab] = useState(0);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [inputValue, setInputValue] = useState('');
-    const [messages, setMessages] = useState<{ text: string; sender: 'user' | 'bot' | 'loading' }[]>([]);
+    const [messages, setMessages] = useState<{ text: string; sender: 'user' | 'bot' | 'loading' | 'image' }[]>([]);
     const open = Boolean(anchorEl);
     const router = useRouter();
     const params = useParams();
@@ -54,27 +56,42 @@ export default function AgentDetailPage() {
     };
     const handleSend = () => {
         if (inputValue.trim()) {
-          const userMessage: { text: string; sender: 'user' } = {
-            text: inputValue,
-            sender: 'user',
-          };
-          const loadingMessage: { text: string; sender: 'loading' } = {
-            text: '',
-            sender: 'loading',
-          };
-      
-          setMessages([...messages, userMessage, loadingMessage]);
-          setInputValue('');
-      
-          setTimeout(() => {
-            setMessages((prev) => [
-              ...prev.slice(0, -1), // Remove loading message
-              { text: "I'm BigBrainPepe, here's your response!", sender: 'bot' },
-            ]);
-          }, 800);
+            const userMessage: { text: string; sender: 'user' } = {
+                text: inputValue,
+                sender: 'user',
+            };
+            const loadingMessage: { text: '', sender: 'loading' } = {
+                text: '',
+                sender: 'loading',
+            };
+
+            setMessages([...messages, userMessage, loadingMessage]);
+            setInputValue('');
+
+            setTimeout(() => {
+                let imageUrl = '';
+
+                if (selectedMode === 'Meme') {
+                    imageUrl = '/agents/meme1.png'; // Replace with actual image path
+                } else {
+                    // Normal chat response logic
+                    const botResponseText = `You said: "${inputValue}"`; // Echo the user's message
+                    setMessages((prev) => [
+                        ...prev.slice(0, -1), // Remove loading message
+                        { text: botResponseText, sender: 'bot' as 'user' | 'bot' | 'loading' },
+                    ]);
+                }
+
+                // Add image response if exists
+                if (imageUrl) {
+                    setMessages((prev) => [
+                        ...prev.slice(0, -1), // Remove loading message
+                        { text: imageUrl, sender: 'image' as 'user' | 'bot' | 'loading' },
+                    ]);
+                }
+            }, 800);
         }
-      };
-      
+    };
     
 
     return (
@@ -141,49 +158,85 @@ export default function AgentDetailPage() {
 
                 {/* Chat Area */}
                 <Box flexGrow={1} overflow="auto" px={1}>
-    {messages.map((msg, i) => (
-        <Box
-            key={i}
-            display="flex"
-            justifyContent={msg.sender === 'user' ? 'flex-end' : 'flex-start'}
-            mb={1}
-        >
-            <Paper
-                sx={{
-                    p: 1.5,
-                    px: 2,
-                    maxWidth: '70%',
-                    borderRadius: 4,
-                    backgroundColor: msg.sender === 'user' ? '#9333ea' : '#27272a',
-                    color: 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                }}
-                elevation={2}
-            >
-                {msg.sender === 'loading' ? (
-                    <Box sx={{ display: 'flex', gap: 0.5 }}>
-                        {[...Array(3)].map((_, j) => (
-                            <Box
-                                key={j}
+                    {messages.map((msg, i) => (
+                        <Box
+                            key={i}
+                            display="flex"
+                            justifyContent={msg.sender === 'user' ? 'flex-end' : 'flex-start'}
+                            mb={1}
+                        >
+                            <Paper
                                 sx={{
-                                    width: 8,
-                                    height: 8,
-                                    borderRadius: '50%',
-                                    backgroundColor: 'white',
-                                    animation: `bounce 1.4s infinite`,
-                                    animationDelay: `${j * 0.2}s`
+                                    p: 1.5,
+                                    px: 2,
+                                    maxWidth: '70%',
+                                    borderRadius: 4,
+                                    backgroundColor: msg.sender === 'user' ? '#9333ea' : '#27272a',
+                                    color: 'white',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'flex-start',
                                 }}
-                            />
-                        ))}
-                    </Box>
-                ) : (
-                    msg.text
-                )}
-            </Paper>
-        </Box>
-    ))}
-</Box>
+                                elevation={2}
+                            >
+                                {msg.sender === 'loading' ? (
+                                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                        {[...Array(3)].map((_, j) => (
+                                            <Box
+                                                key={j}
+                                                sx={{
+                                                    width: 8,
+                                                    height: 8,
+                                                    borderRadius: '50%',
+                                                    backgroundColor: 'white',
+                                                    animation: `bounce 1.4s infinite`,
+                                                    animationDelay: `${j * 0.2}s`
+                                                }}
+                                            />
+                                        ))}
+                                    </Box>
+                                ) : msg.sender === 'image' ? (
+                                    <>
+                                        <Box display="flex" alignItems="center" mb={1}>
+                                            <Avatar src="/agents/meme1.png" alt="Agent Name" sx={{ width: 30, height: 30, mr: 1 }} />
+                                            <Typography variant="body2" color="white">BigBrainPepe</Typography>
+                                        </Box>
+                                        <img src={msg.text} alt="Generated Meme" style={{ maxWidth: '100%', borderRadius: '4px' }} />
+                                        <Box display="flex" justifyContent="flex-end" mt={1}>
+                                            <IconButton sx={{ color: 'white' }} onClick={() => {/* Handle video action */}}>
+                                                <VideoIcon /> {/* Replace with actual video icon */}
+                                            </IconButton>
+                                            <IconButton sx={{ color: 'white' }} onClick={() => {/* Handle regenerate action */}}>
+                                                <RefreshIcon /> {/* Replace with actual regenerate icon */}
+                                            </IconButton>
+                                        </Box>
+                                    </>
+                                ) : (
+                                    <>
+                                        {msg.sender !== 'user' && ( // Show agent image and name only for agent responses
+                                            <Box display="flex" alignItems="center" mt={1}>
+                                                <Avatar src="/agents/meme1.png" alt="Agent Name" sx={{ width: 30, height: 30, mr: 1 }} />
+                                                <Typography variant="body2" color="white">BigBrainPepe</Typography>
+                                            </Box>
+                                        )}
+                                                                                <Typography variant="body2" color="white">{msg.text}</Typography>
+
+                                        {msg.sender !== 'user' && (
+                                            <Box display="flex" >
+                                                <IconButton sx={{ color: 'white', fontSize: 'small' }} onClick={() => {/* Handle copy action */}}>
+                                                    <ContentCopy  />
+                                                </IconButton>
+                                                <IconButton sx={{ color: 'white', fontSize: 'small' }} onClick={() => {/* Handle regenerate action */}}>
+                                                    <RefreshIcon  />
+                                                </IconButton>
+                                            </Box>
+                                        )}
+                                    </>
+                                )}
+                            </Paper>
+                        </Box>
+                    ))}
+                </Box>
 
 
                 {/* Prompt & Chat Input */}
