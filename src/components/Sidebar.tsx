@@ -1,32 +1,41 @@
 "use client"
 
 import Link from 'next/link';
-import { 
-  Box, 
-  Typography, 
-  Button, 
-  List, 
-  ListItem, 
- 
+import {
+  Box,
+  Typography,
+  Button,
+  List,
+  ListItem,
+
   IconButton,
   Stack,
 
   styled
 } from '@mui/material';
-import { 
-  ChevronLeft, 
+import {
+  ChevronLeft,
 
-  Info, 
-  Plus, 
-  Rocket, 
-  Search, 
-  TrendingUp, 
-  Trophy, 
-  User, 
-  UserPlus, 
-  UsersRound 
+  Info,
+  Plus,
+  Rocket,
+  Search,
+  TrendingUp,
+  Trophy,
+  User,
+  UserPlus,
+  UsersRound
 } from 'lucide-react';
 
+// import {
+//   ConnectWallet,
+//   WalletDropdown,
+//   WalletAdvancedAddressDetails,
+//   WalletAdvancedTokenHoldings,
+//   WalletAdvancedTransactionActions,
+//   WalletAdvancedWalletActions,
+// } from '@coinbase/onchainkit/wallet';
+import { Wallet } from '@coinbase/onchainkit/wallet';
 // Styled components
 const SidebarContainer = styled(Box)(({ theme }) => ({
   position: 'fixed',
@@ -122,7 +131,17 @@ const Sidebar = () => {
               <Typography>Explore</Typography>
             </StyledLink>
           </NavItem>
-         
+
+          {/* <Wallet>
+      <ConnectWallet />
+      <WalletDropdown>
+        <WalletAdvancedWalletActions />
+        <WalletAdvancedAddressDetails />
+        <WalletAdvancedTransactionActions />
+        <WalletAdvancedTokenHoldings />
+      </WalletDropdown>
+    </Wallet> */}
+ 
           <NavItem disablePadding>
             <StyledLink href="/my-memes">
               <UsersRound size={20} />
@@ -153,23 +172,26 @@ const Sidebar = () => {
               <Typography>About</Typography>
             </StyledLink>
           </NavItem>
+
+          <Wallet/>
+
         </List>
       </Box>
 
       {/* Bottom Section */}
       <Box sx={{ mt: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <Button 
-          variant="contained" 
+        <Button
+          variant="contained"
           fullWidth
           startIcon={<Plus size={20} />}
           sx={{ backgroundColor: '#9333ea', '&:hover': { backgroundColor: '#7e22ce' } }}
         >
           <Link href={"/creatememe"}>
-          Create Meme
+            Create Meme
           </Link>
-          
+
         </Button>
-        
+
         <Stack direction="row" spacing={1}>
           <LoginButton>
             <User size={20} />

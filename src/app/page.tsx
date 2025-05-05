@@ -16,7 +16,7 @@ import { useState } from "react";
 import LatestMemes from "@/components/LatestMemes";
 import homePageData from '../data/homePageData.json';
 import HorizontalScrollSection from "@/components/HorizontalScrollSection";
-
+import Providers from '../provider/providers';
 
 export default function Home() {
 
@@ -32,6 +32,9 @@ export default function Home() {
   };
 
   return (
+    <Providers>
+
+   
     <Container sx={{ py: 4 }}>
       {/* Meme Generator Section */}
       <Box
@@ -113,6 +116,7 @@ export default function Home() {
       </HorizontalScrollSection>
       <LatestMemes memes={latestMemes} />
     </Container>
+    </Providers>
   );
 }
 

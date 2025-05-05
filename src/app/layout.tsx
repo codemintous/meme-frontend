@@ -3,6 +3,11 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 import { Box, CssBaseline } from "@mui/material";
+import '@coinbase/onchainkit/styles.css';
+import Providers from "@/provider/providers";
+
+ 
+
 
 // Font setup
 const geistSans = Geist({
@@ -25,12 +30,20 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
+  // const initialState = cookieToInitialState(
+  //   getConfig(),
+  //   headers().get('cookie')
+  // );
+
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable}`}
         style={{ backgroundColor: "#000", color: "#fff" }}
       >
+ <Providers >
+
         <CssBaseline />
         <Box display="flex" minHeight="100vh">
           <Box width="280px" flexShrink={0}>
@@ -40,6 +53,8 @@ export default function RootLayout({
             {children}
           </Box>
         </Box>
+  
+        </Providers>
       </body>
     </html>
   );
