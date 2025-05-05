@@ -8,7 +8,6 @@ import {
   Link,
   Stack,
   Container,
-  
 } from "@mui/material";
 import TokenForm from "@/components/TokenForm";
 import MemeForm from "@/components/MemeForm";
