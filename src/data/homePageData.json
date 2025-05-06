@@ -69,7 +69,7 @@
       {
         "name": "The Nutting Professor",
         "symbol": "PRONUT",
-        "chain": "Solana",
+        "chain": "Base",
         "marketCap": "913.02K",
         "lastHour": "-",
         "image": "/agents/meme1.png"
@@ -77,7 +77,7 @@
       {
         "name": "ClapCat",
         "symbol": "SCLAP",
-        "chain": "Solana",
+        "chain": "Base",
         "marketCap": "883.57K",
         "lastHour": "-",
         "image": "/agents/meme2.png"
@@ -85,7 +85,7 @@
       {
         "name": "Kolt",
         "symbol": "SKOLT",
-        "chain": "Solana",
+        "chain": "Base",
         "marketCap": "30.82K",
         "lastHour": "-",
         "image": "/agents/meme3.png"
@@ -109,7 +109,7 @@
       {
         "name": "Kitten",
         "symbol": "KHAI",
-        "chain": "Solana",
+        "chain": "Base",
         "marketCap": "883.57K",
         "lastHour": "-",
         "image": "/agents/meme2.png"
@@ -117,7 +117,7 @@
       {
         "name": "NPC Blue",
         "symbol": "NPCS",
-        "chain": "Solana",
+        "chain": "Base",
         "marketCap": "883.57K",
         "lastHour": "-",
         "image": "/agents/meme2.png"

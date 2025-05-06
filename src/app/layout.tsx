@@ -5,6 +5,7 @@ import Sidebar from "@/components/Sidebar";
 import { Box, CssBaseline } from "@mui/material";
 import '@coinbase/onchainkit/styles.css';
 import Providers from "@/provider/providers";
+import { AuthProvider } from "@/context/AuthContext";
 
  
 
@@ -42,6 +43,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable}`}
         style={{ backgroundColor: "#000", color: "#fff" }}
       >
+        <AuthProvider>
  <Providers >
 
         <CssBaseline />
@@ -55,6 +57,7 @@ export default function RootLayout({
         </Box>
   
         </Providers>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -14,8 +14,7 @@ import { Close, CloudUpload } from "@mui/icons-material";
 import Image from "next/image";
 
 export default function LaunchTokenPage() {
-  // const [chain, setChain] = React.useState("solana");
-  // const [dex, setDex] = React.useState("raydium");
+
 
   const [iconImage, setIconImage] = useState<string | null>(null);
   const [bannerImage, setBannerImage] = useState<string | null>(null);
@@ -100,7 +99,7 @@ const uploadToPinata = async (file: File): Promise<string> => {
   return (
     <Box sx={{ p: 4, color: "white", bgcolor: "#121212", minHeight: "100vh" }}>
       <Typography variant="h6" sx={{ mb: 3 }}>
-        Launch Token on Solana
+        Launch Token
       </Typography>
 
       {/* Token Info */}
@@ -235,7 +234,7 @@ const uploadToPinata = async (file: File): Promise<string> => {
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              <Typography sx={{ color: 'white' }}>HBAR</Typography>
+              <Typography sx={{ color: 'white' }}>Eth</Typography>
             </InputAdornment>
           ),
           style: { color: 'white' },

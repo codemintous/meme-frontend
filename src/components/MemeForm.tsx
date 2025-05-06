@@ -10,6 +10,9 @@ import {
   Avatar,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
+import CloseIcon from "@mui/icons-material/Close";
+import { uploadToPinata } from "@/utils/pinataUploader";
+
 
 const fieldSx = {
   mb: 2,
@@ -17,25 +20,42 @@ const fieldSx = {
     '& fieldset': { borderColor: 'gray' },
     '&:hover fieldset': { borderColor: 'gray' },
     '&.Mui-focused fieldset': { borderColor: 'white' },
-    '& input, & textarea': { color: 'white' },              // text color
-    '& input::placeholder, & textarea::placeholder': {      // placeholder color
+    '& input, & textarea': { color: 'white' },
+    '& input::placeholder, & textarea::placeholder': {
       color: 'gray',
       opacity: 1,
     },
   },
   '& .MuiInputLabel-root': { color: 'gray' },
 };
+
 export default function MemeForm({ onBack }: { onBack: () => void }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [image, setImage] = useState<string | null>(null);
+
   const [description, setDescription] = useState("");
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setImage(reader.result as string);
-      reader.readAsDataURL(file);
+      try {
+        const ipfsHash = await uploadToPinata(file);
+        const url = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`
+    
+        setImage(url);
+     
+        console.log("image uploaded to pinnata............",url)
+      } catch (err) {
+        console.error("Failed to upload image:", err);
+      }
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImage(null);
+ 
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
@@ -51,7 +71,7 @@ export default function MemeForm({ onBack }: { onBack: () => void }) {
         </Typography>
       </Box>
 
-      {/* Avatar + edit icon */}
+      {/* Avatar + edit + close icon */}
       <Box display="flex" justifyContent="center" mb={4}>
         <Box sx={{ position: "relative" }}>
           <Avatar
@@ -70,6 +90,20 @@ export default function MemeForm({ onBack }: { onBack: () => void }) {
           >
             <EditIcon fontSize="small" sx={{ color: "white" }} />
           </IconButton>
+          {image && (
+            <IconButton
+              sx={{
+                position: "absolute",
+                top: -8,
+                right: -8,
+                bgcolor: "#ff1744",
+                p: 0.5,
+              }}
+              onClick={handleRemoveImage}
+            >
+              <CloseIcon fontSize="small" sx={{ color: "white" }} />
+            </IconButton>
+          )}
           <input
             type="file"
             accept="image/*"
@@ -115,8 +149,7 @@ export default function MemeForm({ onBack }: { onBack: () => void }) {
         sx={fieldSx}
       />
 
-
-      {/* Create & Back buttons */}
+      {/* Buttons */}
       <Box mt={3}>
         <Button
           fullWidth

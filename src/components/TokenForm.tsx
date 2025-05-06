@@ -18,7 +18,7 @@ type TokenFormProps = {
 };
 
 
-const chains = ['Solana', 'Ethereum', 'Polygon'];
+const chains = ['Base', 'Ethereum', 'Polygon'];
 
 const TokenForm = ({ onBack }: TokenFormProps) => {
   const pathname = usePathname();
@@ -58,7 +58,7 @@ const TokenForm = ({ onBack }: TokenFormProps) => {
         <TextField
           select
           fullWidth
-          defaultValue="Solana"
+          defaultValue="Base"
           variant="outlined"
           InputProps={{ sx: { color: 'white' } }}
           sx={{

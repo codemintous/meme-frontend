@@ -9,7 +9,6 @@ import {
   ListItem,
 
   IconButton,
-  Stack,
 
   styled
 } from '@mui/material';
@@ -22,20 +21,12 @@ import {
   Search,
   TrendingUp,
   Trophy,
-  User,
-  UserPlus,
+
   UsersRound
 } from 'lucide-react';
 
-// import {
-//   ConnectWallet,
-//   WalletDropdown,
-//   WalletAdvancedAddressDetails,
-//   WalletAdvancedTokenHoldings,
-//   WalletAdvancedTransactionActions,
-//   WalletAdvancedWalletActions,
-// } from '@coinbase/onchainkit/wallet';
-import { Wallet } from '@coinbase/onchainkit/wallet';
+import WalletButton from './WalletButton';
+
 // Styled components
 const SidebarContainer = styled(Box)(({ theme }) => ({
   position: 'fixed',
@@ -81,34 +72,12 @@ const StyledLink = styled(Link)({
   width: '100%'
 });
 
-const LoginButton = styled(Button)({
-  display: 'flex',
-  gap: '8px',
-  alignItems: 'center',
-  backgroundColor: '#9333ea', // purple-600
-  color: 'white',
-  borderRadius: '8px',
-  padding: '8px 16px',
-  '&:hover': {
-    backgroundColor: '#7e22ce', // purple-700
-  }
-});
 
-const SignupButton = styled(Button)({
-  display: 'flex',
-  gap: '8px',
-  alignItems: 'center',
-  backgroundColor: 'black',
-  color: 'white',
-  border: '1px solid rgba(255, 255, 255, 0.2)',
-  borderRadius: '8px',
-  padding: '8px 16px',
-  '&:hover': {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)'
-  }
-});
 
 const Sidebar = () => {
+
+
+
   return (
     <SidebarContainer>
       {/* Logo Section */}
@@ -132,16 +101,6 @@ const Sidebar = () => {
             </StyledLink>
           </NavItem>
 
-          {/* <Wallet>
-      <ConnectWallet />
-      <WalletDropdown>
-        <WalletAdvancedWalletActions />
-        <WalletAdvancedAddressDetails />
-        <WalletAdvancedTransactionActions />
-        <WalletAdvancedTokenHoldings />
-      </WalletDropdown>
-    </Wallet> */}
- 
           <NavItem disablePadding>
             <StyledLink href="/my-memes">
               <UsersRound size={20} />
@@ -173,7 +132,7 @@ const Sidebar = () => {
             </StyledLink>
           </NavItem>
 
-          <Wallet/>
+      
 
         </List>
       </Box>
@@ -192,16 +151,7 @@ const Sidebar = () => {
 
         </Button>
 
-        <Stack direction="row" spacing={1}>
-          <LoginButton>
-            <User size={20} />
-            Login
-          </LoginButton>
-          <SignupButton>
-            <UserPlus size={20} />
-            Sign Up
-          </SignupButton>
-        </Stack>
+<WalletButton/>
       </Box>
     </SidebarContainer>
   );
