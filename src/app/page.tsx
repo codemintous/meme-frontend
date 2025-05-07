@@ -17,9 +17,23 @@ import LatestMemes from "@/components/LatestMemes";
 import homePageData from '../data/homePageData.json';
 import HorizontalScrollSection from "@/components/HorizontalScrollSection";
 import Providers from '../provider/providers';
+import TokenChartTradeSection from "@/components/TokenChartTradeSection"; 
+
+interface TokenType  {
+  name: string;
+  symbol: string;
+  chain: string;
+  marketCap: string;
+  lastHour: string;
+  image: string;
+  price: number;
+}
 
 export default function Home() {
 
+
+  // Inside Home component
+  const [selectedToken, setSelectedToken] =  useState<TokenType | null>(null);
 
   const { trendingAgents, trendingTokens, latestMemes } = homePageData;
 
@@ -68,11 +82,16 @@ export default function Home() {
 
 
       <HorizontalScrollSection id="tokens-container" title="Trending Tokens" icon={<TrendingUp />}>
-        {trendingTokens.map((token) => (
-          <TrendingTokenCard key={token.symbol} token={token} />
-        ))}
-      </HorizontalScrollSection>
+  {trendingTokens.map((token) => (
+    <Box key={token.symbol} onClick={() => setSelectedToken(token)} sx={{ cursor: "pointer" }}>
+      <TrendingTokenCard token={token} />
+    </Box>
+  ))}
+</HorizontalScrollSection>
 
+      {selectedToken && (
+  <TokenChartTradeSection token={selectedToken} />
+)}
 
       {/* Discover Agents */}
 

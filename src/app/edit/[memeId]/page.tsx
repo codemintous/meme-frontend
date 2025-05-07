@@ -1,5 +1,5 @@
 "use client";
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -29,6 +29,7 @@ import TokenInfo from '@/components/TokenInfo';
 import { uploadToPinata } from "@/utils/pinataUploader";
 import { useAuth } from "@/context/AuthContext";
 import ConnectWalletPrompt from "@/components/ConnectWalletPrompt";
+import axios from 'axios';
 
 const categories = ['Meme', 'DeFi', 'NFT', 'Utility'];
 
@@ -63,16 +64,49 @@ export default function EditPage() {
   const [avatarImage, setAvatarImage] = React.useState<string | null>(null);
   const [bgImage, setBgImage] = React.useState<string | null>(null);
 
+
+
+
   const router = useRouter();
   const params = useParams();
   const memeId = params?.memeId;
   console.log("memeid in edit for navigate to chat....", memeId);
 
+  const [name, setName] = useState('');
+  const [category, setCategory] = useState('');
+  const [description, setDescription] = useState('');
+  const [personality, setPersonality] = useState('');
+  const [socialLinks, setSocialLinks] = useState({
+    twitter: '',
+    telegram: '',
+    instagram: '',
+  });
+
+
+  // Optional: token info if needed later
+  const [tokenDetails, setTokenDetails] = useState({
+    name: '',
+    symbol: '',
+    description: '',
+    tokenAddress: '',
+  });
+
+  const handleChange = (key: string, value: string) => {
+    setSocialLinks((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const socials = [
+    { icon: <TwitterIcon />, label: 'X', placeholder: 'https://x.com/undefined', key: 'twitter' },
+    { icon: <TelegramIcon />, label: 'Telegram', placeholder: 'https://t.me/undefined', key: 'telegram' },
+    { icon: <InstagramIcon />, label: 'Instagram', placeholder: 'https://instagram.com/undefined', key: 'instagram' },
+  ];
+
+
   const { jwtToken } = useAuth();
 
   if (!jwtToken) {
     return (
-      <ConnectWalletPrompt/>
+      <ConnectWalletPrompt />
     );
   }
 
@@ -82,24 +116,65 @@ export default function EditPage() {
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
-  
+
     try {
       const ipfsHash = await uploadToPinata(file);
       const url = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`;
-  
+
       if (type === 'avatar') {
         setAvatarImage(url);
       }
-  
+
       if (type === 'background') {
         setBgImage(url);
       }
-  
+
       console.log(`${type} image uploaded to IPFS: ${url}`);
     } catch (error) {
       console.error(`Failed to upload ${type} image:`, error);
     }
   };
+
+
+
+
+  const handleSubmit = async () => {
+    const payload = {
+      agentName: name,
+      category,
+      description,
+      personality,
+      socialMediaLinks: {
+        twitter: socialLinks.twitter,
+        instagram: socialLinks.instagram,
+        telegram: socialLinks.telegram,
+      },
+      profileImageUrl: avatarImage,
+      coverImageUrl: bgImage,
+      tokenDetails,
+    };
+
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/memes`,
+        payload,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${jwtToken}`,
+          },
+        }
+      );
+
+      console.log('Meme created successfully:', response.data);
+      setTokenDetails(response.data);
+      router.push('/launchpad'); // redirect after success
+    } catch (error) {
+      console.error('Error creating meme:', error);
+     
+    }
+  };
+
 
   return (
     <Box sx={{ p: 4, backgroundColor: '#0f0f0f', minHeight: '100vh', color: 'white' }}>
@@ -146,7 +221,7 @@ export default function EditPage() {
                 backgroundColor: "rgba(255,255,255,0.05)",
               },
             }}
-            onClick={()=>{
+            onClick={() => {
               router.push('/launchpad');
             }}
           >
@@ -166,7 +241,7 @@ export default function EditPage() {
                 backgroundColor: "rgba(255,255,255,0.05)",
               },
             }}
-            onClick={()=>{
+            onClick={() => {
               router.push(`/${memeId}`);
             }}
           >
@@ -254,17 +329,19 @@ export default function EditPage() {
               <TextField
                 fullWidth
                 label="Name"
-                defaultValue=""
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 required
                 sx={textFieldStyles}
               />
+
               <TextField
                 select
                 fullWidth
                 label="Category"
-                defaultValue=""
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
                 sx={textFieldStyles}
-                InputProps={{ sx: { color: 'white' } }}
               >
                 {categories.map((cat) => (
                   <MenuItem key={cat} value={cat}>
@@ -277,28 +354,32 @@ export default function EditPage() {
             {/* Description */}
             <TextField
               label="Description"
-              placeholder="Description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               multiline
-              fullWidth
               rows={3}
-              inputProps={{ maxLength: 200 }}
+              fullWidth
               sx={{ mb: 2, ...textFieldStyles }}
             />
 
-            {/* Personality */}
             <TextField
-              fullWidth
+              label="Personality"
+              value={personality}
+              onChange={(e) => setPersonality(e.target.value)}
               multiline
               rows={4}
-              label="Personality"
-              placeholder="Enter custom personality here"
+              fullWidth
               sx={{ mb: 2, ...textFieldStyles }}
             />
-
             {/* Templates Button */}
             <Box textAlign="right">
-              <Button variant="contained" sx={{ bgcolor: '#875CFF', textTransform: 'none' }}>
-                Templates
+              <Button
+                variant="contained"
+                color="primary"
+                sx={{ mt: 2, bgcolor: '#875CFF', textTransform: 'none' }}
+                onClick={handleSubmit}
+              >
+                Save
               </Button>
             </Box>
           </Box>
@@ -312,10 +393,7 @@ export default function EditPage() {
               </IconButton>
             </Box>
 
-            {[{ icon: <TwitterIcon />, label: 'X', placeholder: 'https://x.com/undefined' },
-            { icon: <TelegramIcon />, label: 'Telegram', placeholder: 'https://t.me/undefined' },
-            { icon: <InstagramIcon />, label: 'Instagram', placeholder: 'https://instagram.com/undefined' },
-            ].map((social, index) => (
+            {socials.map((social, index) => (
               <Box key={index} sx={{ mb: 2 }}>
                 <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
                   {social.label}
@@ -323,6 +401,8 @@ export default function EditPage() {
                 <TextField
                   fullWidth
                   placeholder={social.placeholder}
+                  value={socialLinks[social.key as keyof typeof socialLinks]}
+                  onChange={(e) => handleChange(social.key, e.target.value)}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">{social.icon}</InputAdornment>
@@ -360,7 +440,9 @@ export default function EditPage() {
                 https://meme-frontend
               </Typography>
             </Box>
+
           </Box>
+
         </Box>
       )}
 
@@ -371,10 +453,8 @@ export default function EditPage() {
       )}
 
       {tab === 2 && (
-        <TokenInfo/>
-)}
-
-
+        <TokenInfo />
+      )}
 
     </Box>
   );

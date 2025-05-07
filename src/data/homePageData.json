@@ -72,7 +72,8 @@
         "chain": "Base",
         "marketCap": "913.02K",
         "lastHour": "-",
-        "image": "/agents/meme1.png"
+        "image": "/agents/meme1.png",
+        "price":1
       },
       {
         "name": "ClapCat",
@@ -80,7 +81,8 @@
         "chain": "Base",
         "marketCap": "883.57K",
         "lastHour": "-",
-        "image": "/agents/meme2.png"
+        "image": "/agents/meme2.png",
+        "price":1
       },
       {
         "name": "Kolt",
@@ -88,7 +90,8 @@
         "chain": "Base",
         "marketCap": "30.82K",
         "lastHour": "-",
-        "image": "/agents/meme3.png"
+        "image": "/agents/meme3.png",
+        "price":1
       },
       {
         "name": "Non-Playable Coin",
@@ -96,7 +99,8 @@
         "chain": "Ethereum",
         "marketCap": "104.25M",
         "lastHour": "0.33",
-        "image": "/agents/meme4.jpeg"
+        "image": "/agents/meme4.jpeg",
+        "price":1
       },
       {
         "name": "Hana",
@@ -104,7 +108,8 @@
         "chain": "Ethereum",
         "marketCap": "883.57K",
         "lastHour": "-",
-        "image": "/agents/meme2.png"
+        "image": "/agents/meme2.png",
+        "price":1
       },
       {
         "name": "Kitten",
@@ -112,7 +117,8 @@
         "chain": "Base",
         "marketCap": "883.57K",
         "lastHour": "-",
-        "image": "/agents/meme2.png"
+        "image": "/agents/meme2.png",
+        "price":1
       },
       {
         "name": "NPC Blue",
@@ -120,7 +126,8 @@
         "chain": "Base",
         "marketCap": "883.57K",
         "lastHour": "-",
-        "image": "/agents/meme2.png"
+        "image": "/agents/meme2.png",
+        "price":1
       }
     ],
     "latestMemes": [
