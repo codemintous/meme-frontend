@@ -9,9 +9,9 @@ import {
   Divider,
   IconButton,
 } from "@mui/material";
-import axios from "axios";
 import { Close, CloudUpload } from "@mui/icons-material";
 import Image from "next/image";
+import { uploadToPinata } from "@/utils/pinataUploader";
 
 export default function LaunchTokenPage() {
 
@@ -36,7 +36,8 @@ const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: "i
 
   if (type === "icon") {
     setIconImage(previewUrl);
-  } else {
+  } 
+  if (type === "banner"){
     setBannerImage(previewUrl);
   }
 
@@ -48,40 +49,6 @@ const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: "i
   }
 };
 
-
-const uploadToPinata = async (file: File): Promise<string> => {
-  const formData = new FormData();
-  formData.append("file", file);
-
-  const metadata = JSON.stringify({
-    name: "AgentImage",
-    keyvalues: { uploadedBy: "AgentBuilder" },
-  });
-  formData.append("pinataMetadata", metadata);
-
-  const options = JSON.stringify({ cidVersion: 1 });
-  formData.append("pinataOptions", options);
-
-  try {
-    const response = await axios.post(
-      "https://api.pinata.cloud/pinning/pinFileToIPFS",
-      formData,
-      {
-        maxBodyLength: Infinity,
-        headers: {
-          "Content-Type": "multipart/form-data",
-          pinata_api_key: `${process.env.NEXT_PUBLIC_PINATA_API_KEY}`,
-          pinata_secret_api_key: `${process.env.NEXT_PUBLIC_PINATA_API_SECRET}`,
-        },
-      }
-    );
-
-    return `https://gateway.pinata.cloud/ipfs/${response.data.IpfsHash}`;
-  } catch (error) {
-    console.error("Error uploading to Pinata:", error);
-    throw new Error("Failed to upload image");
-  }
-};
 
 
 

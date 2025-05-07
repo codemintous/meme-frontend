@@ -26,6 +26,7 @@ import ImageUploadSection from '@/components/ImageUploadSection';
 import { useRouter } from 'next/navigation';
 import { useParams } from "next/navigation";
 import TokenInfo from '@/components/TokenInfo';
+import { uploadToPinata } from "@/utils/pinataUploader";
 
 const categories = ['Meme', 'DeFi', 'NFT', 'Utility'];
 
@@ -64,22 +65,28 @@ export default function EditPage() {
   const params = useParams();
   const memeId = params?.memeId;
   console.log("memeid in edit for navigate to chat....", memeId);
-
-  const handleImageUpload = (
+  const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>,
     type: 'avatar' | 'background'
   ) => {
     const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (type === 'avatar') {
-          setAvatarImage(reader.result as string);
-        } else {
-          setBgImage(reader.result as string);
-        }
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+  
+    try {
+      const ipfsHash = await uploadToPinata(file);
+      const url = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`;
+  
+      if (type === 'avatar') {
+        setAvatarImage(url);
+      }
+  
+      if (type === 'background') {
+        setBgImage(url);
+      }
+  
+      console.log(`${type} image uploaded to IPFS: ${url}`);
+    } catch (error) {
+      console.error(`Failed to upload ${type} image:`, error);
     }
   };
 

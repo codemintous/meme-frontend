@@ -27,7 +27,7 @@ import { useParams } from "next/navigation";
 import Link from 'next/link';
 import VideoIcon from '@mui/icons-material/VideoCall';
 import RefreshIcon from '@mui/icons-material/Refresh';
-
+import { uploadToPinata } from "@/utils/pinataUploader";
 
 export default function AgentDetailPage() {
     const [tab, setTab] = useState(0);
@@ -54,44 +54,47 @@ export default function AgentDetailPage() {
     const handleMenuClose = () => {
         setAnchorEl(null);
     };
-    const handleSend = () => {
+    const handleSend = async () => {
         if (inputValue.trim()) {
-            const userMessage: { text: string; sender: 'user' } = {
-                text: inputValue,
-                sender: 'user',
-            };
-            const loadingMessage: { text: '', sender: 'loading' } = {
-                text: '',
-                sender: 'loading',
-            };
-
-            setMessages([...messages, userMessage, loadingMessage]);
-            setInputValue('');
-
-            setTimeout(() => {
-                let imageUrl = '';
-
-                if (selectedMode === 'Meme') {
-                    imageUrl = '/agents/meme1.png'; // Replace with actual image path
-                } else {
-                    // Normal chat response logic
-                    const botResponseText = `You said: "${inputValue}"`; // Echo the user's message
-                    setMessages((prev) => [
-                        ...prev.slice(0, -1), // Remove loading message
-                        { text: botResponseText, sender: 'bot' as 'user' | 'bot' | 'loading' },
-                    ]);
-                }
-
-                // Add image response if exists
-                if (imageUrl) {
-                    setMessages((prev) => [
-                        ...prev.slice(0, -1), // Remove loading message
-                        { text: imageUrl, sender: 'image' as 'user' | 'bot' | 'loading' },
-                    ]);
-                }
-            }, 800);
+          const userMessage = { text: inputValue, sender: 'user' as const };
+          const loadingMessage = { text: '', sender: 'loading' as const };
+      
+          setMessages([...messages, userMessage, loadingMessage]);
+          setInputValue('');
+      
+          setTimeout(async () => {
+            if (selectedMode === 'Meme') {
+              try {
+                // Fetch image from public folder
+                const response = await fetch('/agents/meme1.png');
+                const blob = await response.blob();
+                const file = new File([blob], 'meme1.png', { type: blob.type });
+      
+                const ipfsHash = await uploadToPinata(file);
+                const ipfsUrl = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`;
+      
+                setMessages((prev) => [
+                  ...prev.slice(0, -1), // Remove loading message
+                  { text: ipfsUrl, sender: 'image' as const },
+                ]);
+              } catch (error) {
+                console.error('Error uploading meme to Pinata:', error);
+                setMessages((prev) => [
+                  ...prev.slice(0, -1),
+                  { text: 'Failed to generate meme.', sender: 'bot' as const },
+                ]);
+              }
+            } else {
+              const botResponseText = `You said: "${inputValue}"`;
+              setMessages((prev) => [
+                ...prev.slice(0, -1),
+                { text: botResponseText, sender: 'bot' as const },
+              ]);
+            }
+          }, 800);
         }
-    };
+      };
+      
     
 
     return (
