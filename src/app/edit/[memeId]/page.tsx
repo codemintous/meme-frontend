@@ -27,6 +27,8 @@ import { useRouter } from 'next/navigation';
 import { useParams } from "next/navigation";
 import TokenInfo from '@/components/TokenInfo';
 import { uploadToPinata } from "@/utils/pinataUploader";
+import { useAuth } from "@/context/AuthContext";
+import ConnectWalletPrompt from "@/components/ConnectWalletPrompt";
 
 const categories = ['Meme', 'DeFi', 'NFT', 'Utility'];
 
@@ -65,6 +67,15 @@ export default function EditPage() {
   const params = useParams();
   const memeId = params?.memeId;
   console.log("memeid in edit for navigate to chat....", memeId);
+
+  const { jwtToken } = useAuth();
+
+  if (!jwtToken) {
+    return (
+      <ConnectWalletPrompt/>
+    );
+  }
+
   const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>,
     type: 'avatar' | 'background'

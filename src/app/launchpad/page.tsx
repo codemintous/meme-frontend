@@ -10,6 +10,8 @@ import {
 } from "@mui/material";
 
 import LaunchedTokenCard from "@/components/LaunchedTokenCard"; // your token card
+import { useAuth } from "@/context/AuthContext";
+import ConnectWalletPrompt from "@/components/ConnectWalletPrompt";
 
 const mockTokens = [
     {
@@ -100,6 +102,12 @@ const categories = ["Trending", "AI", "Gaming", "Memes", "Tools", "Community"];
 export default function LaunchpadPage() {
 
     const [searchTerm, setSearchTerm] = useState("");
+
+    const { jwtToken } = useAuth();
+
+    if (!jwtToken) {
+        return <ConnectWalletPrompt />;
+    }
 
     const handleSearch = () => {
         console.log("Searching for:", searchTerm);

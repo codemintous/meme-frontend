@@ -11,10 +11,17 @@ import {
 } from "@mui/material";
 import TokenForm from "@/components/TokenForm";
 import MemeForm from "@/components/MemeForm";
-
+import { useAuth } from "@/context/AuthContext";
+import ConnectWalletPrompt from "@/components/ConnectWalletPrompt";
 
 export default function CreateMeme() {
   const [step, setStep] = useState<"select" | "token" | "meme">("select");
+
+  const { jwtToken } = useAuth();
+
+  if (!jwtToken) {
+      return <ConnectWalletPrompt />;
+  }
 
   return (
     <Box

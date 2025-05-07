@@ -12,8 +12,10 @@ import {
 import { Close, CloudUpload } from "@mui/icons-material";
 import Image from "next/image";
 import { uploadToPinata } from "@/utils/pinataUploader";
+import { useAuth } from "@/context/AuthContext";
+import ConnectWalletPrompt from "@/components/ConnectWalletPrompt";
 
-export default function LaunchTokenPage() {
+export default function LaunchTokenPage() { 
 
 
   const [iconImage, setIconImage] = useState<string | null>(null);
@@ -22,6 +24,14 @@ export default function LaunchTokenPage() {
 
   const iconInputRef = React.useRef<HTMLInputElement>(null);
 const bannerInputRef = React.useRef<HTMLInputElement>(null);
+
+const { jwtToken } = useAuth();
+
+if (!jwtToken) {
+  return (
+    <ConnectWalletPrompt/>
+  );
+}
 
 const handleUploadClick = (type: "icon" | "banner") => {
   const inputRef = type === "icon" ? iconInputRef : bannerInputRef;

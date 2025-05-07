@@ -28,6 +28,8 @@ import Link from 'next/link';
 import VideoIcon from '@mui/icons-material/VideoCall';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { uploadToPinata } from "@/utils/pinataUploader";
+import { useAuth } from "@/context/AuthContext";
+import ConnectWalletPrompt from "@/components/ConnectWalletPrompt";
 
 export default function AgentDetailPage() {
     const [tab, setTab] = useState(0);
@@ -43,6 +45,12 @@ export default function AgentDetailPage() {
 
     const [popupOpen, setPopupOpen] = useState(false);
 
+    const { jwtToken } = useAuth();
+
+    if (!jwtToken) {
+        return <ConnectWalletPrompt />;
+    }
+
     const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
         setTab(newValue);
     };
@@ -56,46 +64,46 @@ export default function AgentDetailPage() {
     };
     const handleSend = async () => {
         if (inputValue.trim()) {
-          const userMessage = { text: inputValue, sender: 'user' as const };
-          const loadingMessage = { text: '', sender: 'loading' as const };
-      
-          setMessages([...messages, userMessage, loadingMessage]);
-          setInputValue('');
-      
-          setTimeout(async () => {
-            if (selectedMode === 'Meme') {
-              try {
-                // Fetch image from public folder
-                const response = await fetch('/agents/meme1.png');
-                const blob = await response.blob();
-                const file = new File([blob], 'meme1.png', { type: blob.type });
-      
-                const ipfsHash = await uploadToPinata(file);
-                const ipfsUrl = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`;
-      
-                setMessages((prev) => [
-                  ...prev.slice(0, -1), // Remove loading message
-                  { text: ipfsUrl, sender: 'image' as const },
-                ]);
-              } catch (error) {
-                console.error('Error uploading meme to Pinata:', error);
-                setMessages((prev) => [
-                  ...prev.slice(0, -1),
-                  { text: 'Failed to generate meme.', sender: 'bot' as const },
-                ]);
-              }
-            } else {
-              const botResponseText = `You said: "${inputValue}"`;
-              setMessages((prev) => [
-                ...prev.slice(0, -1),
-                { text: botResponseText, sender: 'bot' as const },
-              ]);
-            }
-          }, 800);
+            const userMessage = { text: inputValue, sender: 'user' as const };
+            const loadingMessage = { text: '', sender: 'loading' as const };
+
+            setMessages([...messages, userMessage, loadingMessage]);
+            setInputValue('');
+
+            setTimeout(async () => {
+                if (selectedMode === 'Meme') {
+                    try {
+                        // Fetch image from public folder
+                        const response = await fetch('/agents/meme1.png');
+                        const blob = await response.blob();
+                        const file = new File([blob], 'meme1.png', { type: blob.type });
+
+                        const ipfsHash = await uploadToPinata(file);
+                        const ipfsUrl = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`;
+
+                        setMessages((prev) => [
+                            ...prev.slice(0, -1), // Remove loading message
+                            { text: ipfsUrl, sender: 'image' as const },
+                        ]);
+                    } catch (error) {
+                        console.error('Error uploading meme to Pinata:', error);
+                        setMessages((prev) => [
+                            ...prev.slice(0, -1),
+                            { text: 'Failed to generate meme.', sender: 'bot' as const },
+                        ]);
+                    }
+                } else {
+                    const botResponseText = `You said: "${inputValue}"`;
+                    setMessages((prev) => [
+                        ...prev.slice(0, -1),
+                        { text: botResponseText, sender: 'bot' as const },
+                    ]);
+                }
+            }, 800);
         }
-      };
-      
-    
+    };
+
+
 
     return (
         <Box display="flex" flexDirection="row" height="100vh">
@@ -206,10 +214,10 @@ export default function AgentDetailPage() {
                                         </Box>
                                         <img src={msg.text} alt="Generated Meme" style={{ maxWidth: '100%', borderRadius: '4px' }} />
                                         <Box display="flex" justifyContent="flex-end" mt={1}>
-                                            <IconButton sx={{ color: 'white' }} onClick={() => {/* Handle video action */}}>
+                                            <IconButton sx={{ color: 'white' }} onClick={() => {/* Handle video action */ }}>
                                                 <VideoIcon /> {/* Replace with actual video icon */}
                                             </IconButton>
-                                            <IconButton sx={{ color: 'white' }} onClick={() => {/* Handle regenerate action */}}>
+                                            <IconButton sx={{ color: 'white' }} onClick={() => {/* Handle regenerate action */ }}>
                                                 <RefreshIcon /> {/* Replace with actual regenerate icon */}
                                             </IconButton>
                                         </Box>
@@ -222,15 +230,15 @@ export default function AgentDetailPage() {
                                                 <Typography variant="body2" color="white">BigBrainPepe</Typography>
                                             </Box>
                                         )}
-                                                                                <Typography variant="body2" color="white">{msg.text}</Typography>
+                                        <Typography variant="body2" color="white">{msg.text}</Typography>
 
                                         {msg.sender !== 'user' && (
                                             <Box display="flex" >
-                                                <IconButton sx={{ color: 'white', fontSize: 'small' }} onClick={() => {/* Handle copy action */}}>
-                                                    <ContentCopy  />
+                                                <IconButton sx={{ color: 'white', fontSize: 'small' }} onClick={() => {/* Handle copy action */ }}>
+                                                    <ContentCopy />
                                                 </IconButton>
-                                                <IconButton sx={{ color: 'white', fontSize: 'small' }} onClick={() => {/* Handle regenerate action */}}>
-                                                    <RefreshIcon  />
+                                                <IconButton sx={{ color: 'white', fontSize: 'small' }} onClick={() => {/* Handle regenerate action */ }}>
+                                                    <RefreshIcon />
                                                 </IconButton>
                                             </Box>
                                         )}

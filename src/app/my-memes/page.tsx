@@ -3,8 +3,19 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
 import MyMemesCard from "@/components/MyMemesCard";
+import { useAuth } from "@/context/AuthContext";
+
+import ConnectWalletPrompt from "@/components/ConnectWalletPrompt";
 
 export default function MyMemes() {
+  const { jwtToken } = useAuth();
+
+  if (!jwtToken) {
+    return (
+      <ConnectWalletPrompt/>
+    );
+  }
+
   const memes = [
     {
       memeId: "1",
@@ -17,7 +28,7 @@ export default function MyMemes() {
       memeId: "2",
       title: "Tom & Jerry",
       description: "Generate meme",
-      image: "/agents/latestmeme2.png", // Replace with real path or image URL
+      image: "/agents/latestmeme2.png",
     },
   ];
 
