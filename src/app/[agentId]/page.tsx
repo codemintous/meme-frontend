@@ -15,7 +15,7 @@ import {
     Paper,
     Stack
 } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import SendIcon from '@mui/icons-material/Send';
 import { Info, Edit, ContentCopy } from '@mui/icons-material';
@@ -30,26 +30,49 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import { uploadToPinata } from "@/utils/pinataUploader";
 import { useAuth } from "@/context/AuthContext";
 import ConnectWalletPrompt from "@/components/ConnectWalletPrompt";
+import { MemeAgent } from '@/utils/interface';
+import axios from 'axios';
 
 export default function AgentDetailPage() {
     const [tab, setTab] = useState(0);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [inputValue, setInputValue] = useState('');
     const [messages, setMessages] = useState<{ text: string; sender: 'user' | 'bot' | 'loading' | 'image' }[]>([]);
+    const [selectedMode, setSelectedMode] = useState('Chat');
+    const [popupOpen, setPopupOpen] = useState(false);
+    const [memeDetail , setMemeDetail] = useState<MemeAgent | null>(null)
     const open = Boolean(anchorEl);
     const router = useRouter();
     const params = useParams();
     const agentId = params?.agentId;
-
-    const [selectedMode, setSelectedMode] = useState('Chat');
-
-    const [popupOpen, setPopupOpen] = useState(false);
-
     const { jwtToken } = useAuth();
+
+    useEffect(() => {
+        const fetchMemes = async () => {
+          try {
+            const response = await axios.get(
+              `${process.env.NEXT_PUBLIC_BASE_URL}/api/memes/${agentId}`
+            );
+            setMemeDetail(response.data); // assuming response.data is the object for a single meme
+            console.log("memedetail...",response.data);
+          } catch (error) {
+            console.error("Error fetching meme agent:", error);
+          }
+        };
+      
+        if (agentId) {
+          fetchMemes();
+        }
+      }, [agentId]);
+
+
+
 
     if (!jwtToken) {
         return <ConnectWalletPrompt />;
     }
+
+
 
     const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
         setTab(newValue);
@@ -112,10 +135,10 @@ export default function AgentDetailPage() {
                 {/* Header */}
                 <Box display="flex" alignItems="center" justifyContent="space-between" gap={2} mb={2}>
                     <Box display="flex" alignItems="center" gap={2}>
-                        <Avatar src="/agents/meme1.png" alt="BigBrainPepe" sx={{ width: 56, height: 56 }} />
+                        <Avatar src={`${memeDetail?.profileImageUrl}`} alt="BigBrainPepe" sx={{ width: 56, height: 56 }} />
                         <Box>
                             <Typography variant="h6" color="white">BigBrainPepe</Typography>
-                            <Typography variant="body2" color="gray">The Biggest Brain in Crypto.</Typography>
+                            <Typography variant="body2" color="gray">{memeDetail?.description}</Typography>
                         </Box>
                     </Box>
                     <Box display="flex" flexDirection="column" alignItems="end" gap={2}>

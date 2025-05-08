@@ -57,6 +57,9 @@ const textFieldStyles = {
     color: 'gray',
     opacity: 1,
   },
+  '& .MuiSelect-select': {
+    color: 'white', // ensures selected value is white
+  },
 };
 
 export default function EditPage() {
@@ -168,7 +171,7 @@ export default function EditPage() {
 
       console.log('Meme created successfully:', response.data);
       setTokenDetails(response.data);
-      router.push('/launchpad'); // redirect after success
+    
     } catch (error) {
       console.error('Error creating meme:', error);
      

@@ -12,6 +12,10 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import CloseIcon from "@mui/icons-material/Close";
 import { uploadToPinata } from "@/utils/pinataUploader";
+import { useAuth } from "@/context/AuthContext";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+// import { MemeAgent } from "@/utils/interface";
 
 
 const fieldSx = {
@@ -29,22 +33,25 @@ const fieldSx = {
   '& .MuiInputLabel-root': { color: 'gray' },
 };
 
+
 export default function MemeForm({ onBack }: { onBack: () => void }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [image, setImage] = useState<string | null>(null);
-
+  const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const { jwtToken } = useAuth();
+  // const [meme, setMeme] = useState<MemeAgent | null>(null);
+
+  const router = useRouter();
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       try {
         const ipfsHash = await uploadToPinata(file);
-        const url = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`
-    
+        const url = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`;
         setImage(url);
-     
-        console.log("image uploaded to pinnata............",url)
+        console.log("Image uploaded:", url);
       } catch (err) {
         console.error("Failed to upload image:", err);
       }
@@ -53,9 +60,55 @@ export default function MemeForm({ onBack }: { onBack: () => void }) {
 
   const handleRemoveImage = () => {
     setImage(null);
- 
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleSubmit = async () => {
+    if (!image || !name || !description) {
+      alert("Please fill all required fields.");
+      return;
+    }
+
+    const payload = {
+      agentName: name,
+      category: "Funny",
+      description: description,
+      personality: "Witty and sarcastic",
+      socialMediaLinks: {
+        twitter: "https://twitter.com/memeagent",
+        instagram: "https://instagram.com/memeagent",
+        facebook: "https://facebook.com/memeagent",
+      },
+      profileImageUrl: image,
+      coverImageUrl: "https://example.com/cover.jpg", // Static for now
+      tokenDetails: {
+        name: "Meme Token",
+        symbol: "MEME",
+        description: "The official token for MemeAgent",
+        tokenAddress: "0x1234567890abcdef...",
+      },
+    };
+
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/memes`,
+        payload,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${jwtToken}`,
+          },
+        }
+      );
+      if (!response) throw new Error("Failed to create meme");
+
+      
+      console.log("Meme created:", response);
+      router.push(`/edit/${response.data._id}`)
+   
+    } catch (error) {
+      console.error("Create meme error:", error);
+      alert("Failed to create meme. Check console for details.");
     }
   };
 
@@ -120,6 +173,8 @@ export default function MemeForm({ onBack }: { onBack: () => void }) {
         label="Name*"
         placeholder="Name"
         variant="outlined"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
         InputLabelProps={{ shrink: true }}
         sx={fieldSx}
       />
@@ -154,6 +209,7 @@ export default function MemeForm({ onBack }: { onBack: () => void }) {
         <Button
           fullWidth
           variant="contained"
+          onClick={handleSubmit}
           sx={{
             bgcolor: "#875CFF",
             textTransform: "none",

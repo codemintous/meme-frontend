@@ -2,21 +2,25 @@
 
 import { Box, Card, CardContent, IconButton, Typography, styled } from '@mui/material';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 import Link from 'next/link';
+import { MemeAgent } from '@/utils/interface';
+import { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import axios from 'axios';
 
+// interface TrendingAgent {
+//   name: string;
+//   category: string;
+//   chain: string;
+//   id: string;
+//   image: string;
+//   description: string;
+// }
 
-interface TrendingAgent {
-  name: string;
-  category: string;
-  chain: string;
-  id: string;
-  image: string;
-  description: string;
-}
-
-interface TrendingAgentCardProps {
-  agent: TrendingAgent;
-}
+// interface TrendingAgentCardProps {
+//   agent: TrendingAgent;
+// }
 
 // Styled Components
 const AgentCard = styled(Card)(() => ({
@@ -79,11 +83,32 @@ const AgentDescription = styled(Typography)({
   overflowWrap: 'break-word', // natural wrap
   whiteSpace: 'normal', // ensure it's allowed to wrap to next line
 });
+export default function TrendingAgentCard({ agent }: { agent: MemeAgent }) {
 
+  const [likeCount, setLikeCount] = useState(agent.likes || 0);
+  const [isLiked, setIsLiked] = useState(false); // optional toggle
+  const { jwtToken } = useAuth();
 
-export default function TrendingAgentCard({ agent }: TrendingAgentCardProps) {
+  const handleLike = async () => {
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/memes/${agent._id}/like`,
+        {
+          headers: {
+            Authorization: `Bearer ${jwtToken}`,
+          },
+        }
+      );
+      console.log(response);
+      setIsLiked(true); // optional
+      setLikeCount((prev: number) => prev + 1);
+    } catch (error) {
+      console.error('Error liking meme:', error);
+    }
+  };
+
   return (
-    <AgentCard sx={{ backgroundImage: `url(${agent.image})` , width: 180, flexShrink: 0 }}>
+    <AgentCard sx={{ backgroundImage: `url(${agent.profileImageUrl})` , width: 180, flexShrink: 0 }}>
       {/* Top gradient overlay */}
       
       <TopOverlay>
@@ -91,18 +116,26 @@ export default function TrendingAgentCard({ agent }: TrendingAgentCardProps) {
           variant="body2"
           sx={{ color: '#fafafa', fontWeight: 500, textTransform: 'uppercase' }}
         >
-          {agent.chain}
+          {agent.tokenDetails.symbol}
         </Typography>
-        <IconButton sx={{ color: '#fafafa', '&:hover': { color: '#8b5cf6' } }}>
-          <FavoriteBorderIcon />
-        </IconButton>
+        <Box display="flex" alignItems="center" gap={0.5}>
+          <IconButton
+            onClick={handleLike}
+            sx={{ color: '#fafafa', '&:hover': { color: '#8b5cf6' }, padding: 0.5 }}
+          >
+            {isLiked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+          </IconButton>
+          <Typography variant="body2" sx={{ color: '#fafafa' }}>
+            {likeCount}
+          </Typography>
+        </Box>
       </TopOverlay>
 
       {/* Middle Click Area */}
-      <Box component={Link} href={`/${agent.id}`} sx={{ flexGrow: 1 }} />
+      <Box component={Link} href={`/${agent._id}`} sx={{ flexGrow: 1 }} />
 
       {/* Bottom gradient content */}
-      <Link href={`/${agent.id}`} style={{ textDecoration: 'none' }}>
+      <Link href={`/${agent._id}`} style={{ textDecoration: 'none' }}>
         <BottomOverlay>
           <Box>
             <AgentName>{agent.name}</AgentName>

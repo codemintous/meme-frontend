@@ -12,12 +12,14 @@ import {
 import TrendingAgentCard from "@/components/TrendingAgentCard";
 import TrendingTokenCard from "@/components/TrendingTokenCard";
 import DiscoverAgentCard from "@/components/DiscoverAgentCard";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import LatestMemes from "@/components/LatestMemes";
 import homePageData from '../data/homePageData.json';
 import HorizontalScrollSection from "@/components/HorizontalScrollSection";
 import Providers from '../provider/providers';
 import TokenChartTradeSection from "@/components/TokenChartTradeSection"; 
+import axios from "axios";
+import { MemeAgent } from "@/utils/interface";
 
 interface TokenType  {
   name: string;
@@ -31,14 +33,33 @@ interface TokenType  {
 
 export default function Home() {
 
-
-  // Inside Home component
+  const [memeAgents, setMemeAgents] = useState<MemeAgent[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedToken, setSelectedToken] =  useState<TokenType | null>(null);
-
   const { trendingAgents, trendingTokens, latestMemes } = homePageData;
-
-
   const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    const fetchMemes = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/memes`
+        );
+        setMemeAgents(response.data); // assuming the response data is an array
+        console.log(response.data);
+      } catch (error) {
+        console.error("Error fetching meme agents:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMemes();
+  }, []);
+
+  if (loading) return <div>Loading memes...</div>;
+
+
 
   const handleSearch = () => {
     console.log("Searching for:", searchTerm);
@@ -75,11 +96,10 @@ export default function Home() {
       </Box>
 
       <HorizontalScrollSection id="agents-container" title="Trending Agents" icon={<TrendingUp />}>
-        {trendingAgents.map((agent) => (
-          <TrendingAgentCard key={agent.id} agent={agent} />
+        {memeAgents.map((agent) => (
+          <TrendingAgentCard key={agent._id} agent={agent} />
         ))}
       </HorizontalScrollSection>
-
 
       <HorizontalScrollSection id="tokens-container" title="Trending Tokens" icon={<TrendingUp />}>
   {trendingTokens.map((token) => (

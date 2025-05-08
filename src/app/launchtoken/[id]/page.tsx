@@ -5,7 +5,6 @@ import {
   Button,
   TextField,
   Typography,
-  InputAdornment,
   Divider,
   IconButton,
 } from "@mui/material";
@@ -14,6 +13,8 @@ import Image from "next/image";
 import { uploadToPinata } from "@/utils/pinataUploader";
 import { useAuth } from "@/context/AuthContext";
 import ConnectWalletPrompt from "@/components/ConnectWalletPrompt";
+// import { useParams } from "next/navigation";
+// import { ethers } from "ethers";
 
 export default function LaunchTokenPage() { 
 
@@ -24,6 +25,12 @@ export default function LaunchTokenPage() {
 
   const iconInputRef = React.useRef<HTMLInputElement>(null);
 const bannerInputRef = React.useRef<HTMLInputElement>(null);
+
+
+
+
+// const param = useParams();
+// const id = param.id;
 
 const { jwtToken } = useAuth();
 
@@ -196,10 +203,10 @@ const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: "i
     </Box>
 
 
-      {/* Initial Buy */}
+    
       <Divider sx={{ borderColor: "gray", mb: 2 }} />
       <Typography variant="subtitle2" sx={{ mb: 1 }}>
-        Initial Buy
+        Supply
       </Typography>
       <Typography variant="caption" sx={{ color: "gray", mb: 1, display: "block" }}>
         Optional: Be the very first person to buy your token!
@@ -208,15 +215,15 @@ const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: "i
         fullWidth
         type="number"
         placeholder="0"
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <Typography sx={{ color: 'white' }}>Eth</Typography>
-            </InputAdornment>
-          ),
-          style: { color: 'white' },
-          inputMode: 'numeric', // enhances mobile input UX
-        }}
+        // InputProps={{
+        //   startAdornment: (
+        //     <InputAdornment position="start">
+        //       <Typography sx={{ color: 'white' }}>Eth</Typography>
+        //     </InputAdornment>
+        //   ),
+        //   style: { color: 'white' },
+        //   inputMode: 'numeric', // enhances mobile input UX
+        // }}
         sx={{ mb: 1, ...commonTextFieldStyles }}
       />
       <Typography variant="caption" sx={{ color: "gray" }}>
@@ -240,11 +247,10 @@ const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: "i
       width: "fit-content",
     }}
   >
-    Connect Wallet
+    Launch
   </Button>
 </Box>
 
-     
 
     </Box>
   );

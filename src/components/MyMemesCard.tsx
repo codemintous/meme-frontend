@@ -60,7 +60,7 @@ const MyMemesCard = ({
   };
 
   const handleLaunch = () => {
-    router.push(`/launchtoken`);
+    router.push(`/launchtoken/${memeId}`);
   };
 
   return (
