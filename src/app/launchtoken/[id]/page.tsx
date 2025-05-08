@@ -14,14 +14,17 @@ import { uploadToPinata } from "@/utils/pinataUploader";
 import { useAuth } from "@/context/AuthContext";
 import ConnectWalletPrompt from "@/components/ConnectWalletPrompt";
 // import { useParams } from "next/navigation";
-// import { ethers } from "ethers";
+import factory_contract_abi from "@/data/factory_contract_abi.json"
+import { BrowserProvider, Contract } from "ethers";
 
 export default function LaunchTokenPage() { 
 
 
   const [iconImage, setIconImage] = useState<string | null>(null);
   const [bannerImage, setBannerImage] = useState<string | null>(null);
-
+  const [tokenName, setTokenName] = useState("");
+  const [tokenSymbol, setTokenSymbol] = useState("");
+  const [supply, setSupply] = useState("");
 
   const iconInputRef = React.useRef<HTMLInputElement>(null);
 const bannerInputRef = React.useRef<HTMLInputElement>(null);
@@ -39,6 +42,49 @@ if (!jwtToken) {
     <ConnectWalletPrompt/>
   );
 }
+
+
+const handleLaunchToken = async () => {
+  try {
+    const provider = new BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const userAddress = await signer.getAddress();
+    console.log("Connected user:", userAddress);
+
+    const network = await provider.getNetwork();
+    console.log("Connected to network:", network);
+
+    const contract = new Contract(
+      process.env.NEXT_PUBLIC_HEDERA_CONTRACT_ADDRESS!,
+      factory_contract_abi,
+      signer
+    );
+
+    const tx = await contract.launchToken(
+      tokenName,           // Replace with actual value
+    tokenSymbol,          // Replace with actual value
+      parseInt(supply),// Replace with actual value
+      1000000
+    );
+
+    console.log("Transaction sent:", tx.hash);
+
+    const receipt = await tx.wait();
+    console.log("Transaction mined:", receipt);
+
+    // const event = receipt.logs.find((log: any) => log.fragment?.name === "TokenLaunched");
+
+    // if (event) {
+    //   console.log("🚀 Token launched!", event);
+    //   console.log("Token Address:", event.args.token);
+    // } else {
+    //   console.error("❌ TokenLaunched event not found");
+    // }
+  } catch (error) {
+    console.error("Launch token failed:", error);
+  }
+};
+
 
 const handleUploadClick = (type: "icon" | "banner") => {
   const inputRef = type === "icon" ? iconInputRef : bannerInputRef;
@@ -88,8 +134,23 @@ const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: "i
 
       {/* Token Info */}
       <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
-        <TextField fullWidth label="Token Name" variant="outlined" sx={commonTextFieldStyles} />
-        <TextField fullWidth label="Token Symbol" variant="outlined" sx={commonTextFieldStyles} />
+      <TextField
+  fullWidth
+  label="Token Name"
+  variant="outlined"
+  value={tokenName}
+  onChange={(e) => setTokenName(e.target.value)}
+  sx={commonTextFieldStyles}
+/>
+
+<TextField
+  fullWidth
+  label="Token Symbol"
+  variant="outlined"
+  value={tokenSymbol}
+  onChange={(e) => setTokenSymbol(e.target.value)}
+  sx={commonTextFieldStyles}
+/>
       </Box>
 
       {/* Description */}
@@ -212,20 +273,13 @@ const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: "i
         Optional: Be the very first person to buy your token!
       </Typography>
       <TextField
-        fullWidth
-        type="number"
-        placeholder="0"
-        // InputProps={{
-        //   startAdornment: (
-        //     <InputAdornment position="start">
-        //       <Typography sx={{ color: 'white' }}>Eth</Typography>
-        //     </InputAdornment>
-        //   ),
-        //   style: { color: 'white' },
-        //   inputMode: 'numeric', // enhances mobile input UX
-        // }}
-        sx={{ mb: 1, ...commonTextFieldStyles }}
-      />
+  fullWidth
+  type="number"
+  placeholder="0"
+  value={supply}
+  onChange={(e) => setSupply(e.target.value)}
+  sx={{ mb: 1, ...commonTextFieldStyles }}
+/>
       <Typography variant="caption" sx={{ color: "gray" }}>
         You spend 0 to receive your newly created tokens.
       </Typography>
@@ -239,6 +293,7 @@ const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: "i
 >
   <Button
     variant="contained"
+    onClick={handleLaunchToken}
     sx={{
       bgcolor: "#7f5af0",
       textTransform: "none",
