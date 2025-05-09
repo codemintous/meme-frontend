@@ -138,7 +138,7 @@ export default function TrendingAgentCard({ agent }: { agent: MemeAgent }) {
       <Link href={`/${agent._id}`} style={{ textDecoration: 'none' }}>
         <BottomOverlay>
           <Box>
-            <AgentName>{agent.name}</AgentName>
+            <AgentName>{agent.agentName}</AgentName>
             <AgentCategory>{agent.category}</AgentCategory>
           </Box>
           <AgentDescription>

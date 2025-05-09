@@ -20,18 +20,12 @@ import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { useRouter } from "next/navigation";
+import { MemeAgent } from "@/utils/interface";
 
-const MyMemesCard = ({
-  title,
-  description,
-  image,
-  memeId,
-}: {
-  title: string;
-  description: string;
-  image?: string;
-  memeId: string;
-}) => {
+
+const MyMemesCard = ({ meme }: { meme: MemeAgent }) => {
+
+
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const router = useRouter();
 
@@ -44,23 +38,22 @@ const MyMemesCard = ({
   };
 
   const handleEdit = () => {
-    router.push(`/edit/${memeId}`);
+    router.push(`/edit/${meme._id}`);
     handleMenuClose();
   };
 
   const handleTalkToMeme = () => {
-    router.push(`/${memeId}`);
+    router.push(`/${meme._id}`);
     handleMenuClose();
   };
 
   const handleDelete = () => {
-    // Optional: confirm before delete
-    console.log(`Delete meme with ID: ${memeId}`);
+    console.log(`Delete meme with ID: ${meme._id}`);
     handleMenuClose();
   };
 
   const handleLaunch = () => {
-    router.push(`/launchtoken/${memeId}`);
+    router.push(`/launchtoken/${meme._id}`);
   };
 
   return (
@@ -104,18 +97,23 @@ const MyMemesCard = ({
         </Menu>
       </Box>
 
-      {image ? (
-        <CardMedia component="img" image={image} alt={title} sx={{ height: 200 }} />
-      ) : (
-        <Box sx={{ flexGrow: 1 }} />
-      )}
+      {meme?.profileImageUrl ? (
+  <CardMedia
+    component="img"
+    image={meme.profileImageUrl}
+    alt={meme?.agentName || "Meme Image"}
+    sx={{ height: 200 }}
+  />
+) : (
+  <Box sx={{ flexGrow: 1 }} />
+)}
 
       <CardContent>
         <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-          {title}
+          {meme?.agentName}
         </Typography>
         <Typography variant="body2" color="gray">
-          {description}
+          {meme?.description}
         </Typography>
       </CardContent>
 

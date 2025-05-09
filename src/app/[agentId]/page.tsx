@@ -32,6 +32,10 @@ import { useAuth } from "@/context/AuthContext";
 import ConnectWalletPrompt from "@/components/ConnectWalletPrompt";
 import { MemeAgent } from '@/utils/interface';
 import axios from 'axios';
+import { Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
+import TradeForm from "@/components/TradeForm"; // Import your TradeForm component
+
+
 
 export default function AgentDetailPage() {
     const [tab, setTab] = useState(0);
@@ -41,11 +45,14 @@ export default function AgentDetailPage() {
     const [selectedMode, setSelectedMode] = useState('Chat');
     const [popupOpen, setPopupOpen] = useState(false);
     const [memeDetail , setMemeDetail] = useState<MemeAgent | null>(null)
+    const [popupTrade, setPopupTrade] = useState(false);
     const open = Boolean(anchorEl);
     const router = useRouter();
     const params = useParams();
     const agentId = params?.agentId;
     const { jwtToken } = useAuth();
+
+
 
     useEffect(() => {
         const fetchMemes = async () => {
@@ -55,6 +62,7 @@ export default function AgentDetailPage() {
             );
             setMemeDetail(response.data); // assuming response.data is the object for a single meme
             console.log("memedetail...",response.data);
+           
           } catch (error) {
             console.error("Error fetching meme agent:", error);
           }
@@ -66,6 +74,20 @@ export default function AgentDetailPage() {
       }, [agentId]);
 
 
+      const handlePopupOpen = () => {
+        setPopupTrade(true); // Open TradeForm Popup
+        console.log(popupTrade);
+    };
+
+    const handlePopupClose = () => {
+        setPopupTrade(false); // Close TradeForm Popup
+    };
+
+    const handleTradeSubmit = (mode: "buy" | "sell", amount: number, slippage: number) => {
+        console.log("Trade submitted:", { mode, amount, slippage });
+        // Your transaction logic (Web3, backend, etc.)
+        setPopupOpen(false); // Close the popup after submitting
+    };
 
 
     if (!jwtToken) {
@@ -142,7 +164,22 @@ export default function AgentDetailPage() {
                         </Box>
                     </Box>
                     <Box display="flex" flexDirection="column" alignItems="end" gap={2}>
-                        <Stack direction="row" spacing={1}>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                        <Button
+                                variant="contained"
+                                sx={{
+                                    backgroundColor: 'white',
+                                    color: 'black',
+                                    textTransform: 'none',
+                                    borderRadius: 2,
+                                    paddingX: 1,
+                                    paddingY: 0.5,
+                                    boxShadow: 'none'
+                                }}
+                                onClick={handlePopupOpen}
+                            >
+                               Transact
+                            </Button>
                             <IconButton sx={{ color: 'white' }} onClick={() => setPopupOpen(true)}>
                                 <Info />
                             </IconButton>
@@ -433,7 +470,22 @@ export default function AgentDetailPage() {
                 </Box>
             </Box>
 
-
+            <Dialog open={popupOpen} onClose={handlePopupClose}>
+                <DialogTitle>Trade Form</DialogTitle>
+                <DialogContent>
+                    <TradeForm
+                        tokenName={memeDetail?.tokenDetails.name|| ""}
+                        tokenSymbol={memeDetail?.tokenDetails.symbol|| ""}
+                        chain={"base"}
+                        price={ 0}
+                        marketCap={ ""}
+                        onSubmit={handleTradeSubmit} // handle submit logic from TradeForm
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handlePopupClose} color="primary">Close</Button>
+                </DialogActions>
+            </Dialog>
             <AgentPopup open={popupOpen} handleClose={() => setPopupOpen(false)} />
         </Box>
     );

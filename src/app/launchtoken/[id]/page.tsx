@@ -13,27 +13,31 @@ import Image from "next/image";
 import { uploadToPinata } from "@/utils/pinataUploader";
 import { useAuth } from "@/context/AuthContext";
 import ConnectWalletPrompt from "@/components/ConnectWalletPrompt";
-// import { useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import factory_contract_abi from "@/data/factory_contract_abi.json"
-import { BrowserProvider, Contract } from "ethers";
-
+import { BrowserProvider, Contract, Interface, LogDescription, parseUnits } from "ethers";
+import axios from "axios";
 export default function LaunchTokenPage() { 
 
 
   const [iconImage, setIconImage] = useState<string | null>(null);
   const [bannerImage, setBannerImage] = useState<string | null>(null);
   const [tokenName, setTokenName] = useState("");
+  const [tokenDesc, setTokenDesc] = useState("");
   const [tokenSymbol, setTokenSymbol] = useState("");
   const [supply, setSupply] = useState("");
-
+  // const [memeDetail , setMemeDetail] = useState<MemeAgent | null>(null)
   const iconInputRef = React.useRef<HTMLInputElement>(null);
 const bannerInputRef = React.useRef<HTMLInputElement>(null);
 
 
+const param = useParams();
+const id = param.id;
 
 
-// const param = useParams();
-// const id = param.id;
+
+
+
 
 const { jwtToken } = useAuth();
 
@@ -43,6 +47,36 @@ if (!jwtToken) {
   );
 }
 
+const updateTokenDetails = async (tokenAddress: string) => {
+  if (!jwtToken) {
+    console.error("No JWT token available");
+    return;
+  }
+
+  try {
+    const response = await axios.put(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/memes/${id}`,
+      {
+        tokenDetails: {
+          tokenAddress,
+          name: tokenName,
+          symbol: tokenSymbol,
+          description: tokenDesc,
+        },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("✅ Meme agent updated with token info:", response.data);
+  } catch (err) {
+    console.error("❌ Failed to update meme with token info:", err);
+  }
+};
 
 const handleLaunchToken = async () => {
   try {
@@ -55,33 +89,50 @@ const handleLaunchToken = async () => {
     console.log("Connected to network:", network);
 
     const contract = new Contract(
-      process.env.NEXT_PUBLIC_HEDERA_CONTRACT_ADDRESS!,
+      process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS!,
       factory_contract_abi,
       signer
     );
 
+    console.log("Factory address:", process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS);
+
     const tx = await contract.launchToken(
-      tokenName,           // Replace with actual value
-    tokenSymbol,          // Replace with actual value
-      parseInt(supply),// Replace with actual value
-      1000000
+      tokenName,
+      tokenSymbol,
+      parseInt(supply),
+      parseUnits("1", 16)
     );
 
     console.log("Transaction sent:", tx.hash);
-
     const receipt = await tx.wait();
     console.log("Transaction mined:", receipt);
 
-    // const event = receipt.logs.find((log: any) => log.fragment?.name === "TokenLaunched");
+    const iface = new Interface(factory_contract_abi);
+    let tokenAddress: string | null = null;
 
-    // if (event) {
-    //   console.log("🚀 Token launched!", event);
-    //   console.log("Token Address:", event.args.token);
-    // } else {
-    //   console.error("❌ TokenLaunched event not found");
-    // }
+    for (const log of receipt.logs) {
+      try {
+        const parsed = iface.parseLog(log) as LogDescription;
+        if (parsed.name === "TokenLaunched") {
+          tokenAddress = parsed.args.token;
+          console.log("🚀 Token launched!", tokenAddress);
+          break;
+        }
+      } catch (err) {
+        // log did not match ABI, skip
+        console.log(err);
+      }
+    }
+
+    if (tokenAddress) {
+      console.log("✅ Token Address found:", tokenAddress);
+      await updateTokenDetails(tokenAddress);
+    } else {
+      console.warn("⚠️ No TokenLaunched event found — skipping API update");
+    }
+
   } catch (error) {
-    console.error("Launch token failed:", error);
+    console.error("❌ Launch token failed:", error);
   }
 };
 
@@ -156,6 +207,8 @@ const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: "i
       {/* Description */}
       <TextField
         fullWidth
+        value={tokenDesc}
+        onChange={(e) => setTokenDesc(e.target.value)}
         label="Description"
         variant="outlined"
         multiline
