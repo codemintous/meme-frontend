@@ -71,21 +71,21 @@ export default function MemeForm({ onBack }: { onBack: () => void }) {
 
     const payload = {
       agentName: name,
-      category: "Funny",
+      category: "",
       description: description,
-      personality: "Witty and sarcastic",
+      personality: "",
       socialMediaLinks: {
-        twitter: "https://twitter.com/memeagent",
-        instagram: "https://instagram.com/memeagent",
-        facebook: "https://facebook.com/memeagent",
+        twitter: "",
+        instagram: "",
+        facebook: "",
       },
       profileImageUrl: image,
-      coverImageUrl: "https://example.com/cover.jpg", // Static for now
+      coverImageUrl: "", // Static for now
       tokenDetails: {
-        name: "Meme Token",
-        symbol: "MEME",
-        description: "The official token for MemeAgent",
-        tokenAddress: "0x1234567890abcdef...",
+        name: "",
+        symbol: "",
+        description: "",
+        tokenAddress: "",
       },
     };
 

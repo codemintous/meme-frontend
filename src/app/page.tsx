@@ -21,22 +21,13 @@ import TokenChartTradeSection from "@/components/TokenChartTradeSection";
 import axios from "axios";
 import { MemeAgent } from "@/utils/interface";
 
-interface TokenType  {
-  name: string;
-  symbol: string;
-  chain: string;
-  marketCap: string;
-  lastHour: string;
-  image: string;
-  price: number;
-}
 
 export default function Home() {
 
   const [memeAgents, setMemeAgents] = useState<MemeAgent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedToken, setSelectedToken] =  useState<TokenType | null>(null);
-  const { trendingAgents, trendingTokens, latestMemes } = homePageData;
+  const [selectedToken, setSelectedToken] =  useState<MemeAgent | null>(null);
+  const { trendingAgents, latestMemes } = homePageData;
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -102,8 +93,8 @@ export default function Home() {
       </HorizontalScrollSection>
 
       <HorizontalScrollSection id="tokens-container" title="Trending Tokens" icon={<TrendingUp />}>
-  {trendingTokens.map((token) => (
-    <Box key={token.symbol} onClick={() => setSelectedToken(token)} sx={{ cursor: "pointer" }}>
+  {memeAgents.map((token) => (
+    <Box key={token._id} onClick={() => setSelectedToken(token)} sx={{ cursor: "pointer" }}>
       <TrendingTokenCard token={token} />
     </Box>
   ))}

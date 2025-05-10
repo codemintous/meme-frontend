@@ -100,8 +100,9 @@ export default function EditPage() {
 
   const socials = [
     { icon: <TwitterIcon />, label: 'X', placeholder: 'https://x.com/undefined', key: 'twitter' },
-    { icon: <TelegramIcon />, label: 'Telegram', placeholder: 'https://t.me/undefined', key: 'telegram' },
     { icon: <InstagramIcon />, label: 'Instagram', placeholder: 'https://instagram.com/undefined', key: 'instagram' },
+    { icon: <TelegramIcon />, label: 'Telegram', placeholder: 'https://t.me/undefined', key: 'telegram' },
+    
   ];
 
 
@@ -150,7 +151,7 @@ export default function EditPage() {
       socialMediaLinks: {
         twitter: socialLinks.twitter,
         instagram: socialLinks.instagram,
-        telegram: socialLinks.telegram,
+        facebook: socialLinks.telegram,
       },
       profileImageUrl: avatarImage,
       coverImageUrl: bgImage,

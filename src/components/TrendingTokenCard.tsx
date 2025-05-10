@@ -1,18 +1,11 @@
-import Image from 'next/image';
+
 import { Box, Card, Typography } from '@mui/material';
 import { styled } from '@mui/system';
+import { MemeAgent } from '@/utils/interface';
 
-interface TrendingToken {
-  name: string;
-  symbol: string;
-  chain: string;
-  marketCap: string;
-  lastHour: string;
-  image: string;
-}
 
 interface TrendingTokenCardProps {
-  token: TrendingToken;
+  token: MemeAgent;
 }
 
 // Styled Components
@@ -71,32 +64,33 @@ const Value = styled(Typography)({
 });
 
 export default function TrendingTokenCard({ token }: TrendingTokenCardProps) {
-  const isNegative = token.lastHour.startsWith('-');
+
+  console.log("token in trending token.......", token);
 
   return (
     <TokenCard>
       <TokenHeader>
         <TokenImageWrapper>
-          <Image src={token.image} alt={token.name} fill style={{ objectFit: 'cover' }} />
+          <img src={token?.profileImageUrl} alt={token.agentName} style={{ objectFit: 'cover' }} />
         </TokenImageWrapper>
         <TokenInfo>
           <Typography variant="subtitle1" fontWeight={700}>
-            {token.name}
+            {token.tokenDetails?.name}
           </Typography>
           <Typography variant="body2">
-            {token.symbol} / {token.chain}
+            {token.tokenDetails?.symbol} / base
           </Typography>
         </TokenInfo>
       </TokenHeader>
       <InfoSection>
         <Box>
           <Label>Market Cap:</Label>
-          <Value>${token.marketCap}</Value>
+          <Value>$0</Value>
         </Box>
         <Box>
           <Label>Last Hour:</Label>
-          <Value sx={{ color: isNegative ? '#ef4444' : '#22c55e' }}>
-            {token.lastHour !== '-' ? `${token.lastHour}%` : '-'}
+          <Value >
+            {'-'}
           </Value>
         </Box>
       </InfoSection>

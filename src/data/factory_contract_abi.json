@@ -92,12 +92,6 @@
 			{
 				"indexed": true,
 				"internalType": "address",
-				"name": "creator",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "address",
 				"name": "token",
 				"type": "address"
 			},
@@ -219,6 +213,25 @@
 		"inputs": [
 			{
 				"internalType": "address",
+				"name": "token",
+				"type": "address"
+			}
+		],
+		"name": "getAllTokensbalance",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
 				"name": "",
 				"type": "address"
 			}
@@ -231,11 +244,6 @@
 				"type": "address"
 			},
 			{
-				"internalType": "address",
-				"name": "owner",
-				"type": "address"
-			},
-			{
 				"internalType": "uint256",
 				"name": "pricePerToken",
 				"type": "uint256"
@@ -243,6 +251,30 @@
 			{
 				"internalType": "uint256",
 				"name": "totalSupply",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "userTokenBalances",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
 				"type": "uint256"
 			}
 		],

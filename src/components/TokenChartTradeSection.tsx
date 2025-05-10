@@ -1,17 +1,9 @@
 import { Box, Card } from "@mui/material";
 import TradeForm from "@/components/TradeForm"; // Adjust import path if needed
+import { MemeAgent } from "@/utils/interface";
 
-interface Token {
-  name: string;
-  symbol: string;
-  chain: string;
-  marketCap: string;
-  lastHour: string;
-  image: string;
-  price: number;
-}
 interface TokenChartTradeSectionProps {
-  token: Token;
+  token: MemeAgent;
 }
 
 export default function TokenChartTradeSection({ token }: TokenChartTradeSectionProps) {
@@ -41,18 +33,19 @@ export default function TokenChartTradeSection({ token }: TokenChartTradeSection
           <iframe
             src={`https://dexscreener.com/solana/DHkguUzSuKRAZQTQ394tfQpa8CqrFoKSGggBr7XsawJr?embed=1&loadChartSettings=0&trades=0&tabs=0&info=0&chartLeftToolbar=0&chartTheme=dark&theme=dark&chartStyle=1&chartType=usd&interval=15`}
             style={{ width: "100%", height: "400px", border: "none" }}
-            title={`${token.name} Chart`}
+            title={`${token.tokenDetails?.name} Chart`}
           />
         </Box>
 
         {/* Trade Form */}
         <Box flex={{ xs: "1 1 100%", md: "1 1 30%" }}>
           <TradeForm
-            tokenName={token.name}
-            tokenSymbol={token.symbol}
-            chain={token.chain}
-            price={token.price}
-            marketCap={token.marketCap}
+            tokenName={token.tokenDetails?.name}
+            tokenSymbol={token.tokenDetails?.symbol}
+            chain="base"
+            price={0}
+            marketCap={`0`}
+            tokenAddress={token.tokenDetails?.tokenAddress}
             onSubmit={handleTradeSubmit}
           />
         </Box>

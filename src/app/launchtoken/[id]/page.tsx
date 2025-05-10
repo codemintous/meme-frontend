@@ -99,8 +99,8 @@ const handleLaunchToken = async () => {
     const tx = await contract.launchToken(
       tokenName,
       tokenSymbol,
-      parseInt(supply),
-      parseUnits("1", 16)
+      parseUnits(supply,18),
+      parseUnits("1", 14)
     );
 
     console.log("Transaction sent:", tx.hash);
