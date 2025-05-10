@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -29,12 +29,43 @@ export default function LaunchTokenPage() {
   // const [memeDetail , setMemeDetail] = useState<MemeAgent | null>(null)
   const iconInputRef = React.useRef<HTMLInputElement>(null);
 const bannerInputRef = React.useRef<HTMLInputElement>(null);
+  const [socialLinks, setSocialLinks] = useState({
+    twitter: '',
+    telegram: '',
+    instagram: '',
+  });
 
 
 const param = useParams();
 const id = param.id;
 
+useEffect(() => {
+  const fetchMemes = async () => {
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/memes/${id}`
+      );
+      const data = response.data;
 
+      // setMemeDetail(data); // Save full object
+      
+      setIconImage(data.profileImageUrl); // Set avatar image (adjust key if needed)
+      setBannerImage(data.coverImageUrl);
+      // setSocialLinks({
+      //   twitter: data.|| '',
+      //   telegram: data.telegram || '',
+      //   instagram: data.instagram || '',
+      // });
+      console.log("memedetail...", data);
+    } catch (error) {
+      console.error("Error fetching meme agent:", error);
+    }
+  };
+
+  if (id) {
+    fetchMemes();
+  }
+}, [id]);
 
 
 
@@ -219,19 +250,39 @@ const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: "i
       {/* Links */}
       <Typography sx={{ mb: 1 }}>Links</Typography>
       <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
-        <TextField fullWidth label="Discord" variant="outlined" sx={commonTextFieldStyles} />
-        <TextField fullWidth label="Telegram" variant="outlined" sx={commonTextFieldStyles} />
-      </Box>
-      <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-        <TextField
-          fullWidth
-          label="Website"
-          defaultValue=""
-          variant="outlined"
-          sx={commonTextFieldStyles}
-        />
-        <TextField fullWidth label="X" variant="outlined" sx={commonTextFieldStyles} />
-      </Box>
+  <TextField
+    fullWidth
+    label="Telegram"
+    variant="outlined"
+    value={socialLinks.telegram}
+    onChange={(e) =>
+      setSocialLinks({ ...socialLinks, telegram: e.target.value })
+    }
+    sx={commonTextFieldStyles}
+  />
+  <TextField
+    fullWidth
+    label="Twitter"
+    variant="outlined"
+    value={socialLinks.twitter}
+    onChange={(e) =>
+      setSocialLinks({ ...socialLinks, twitter: e.target.value })
+    }
+    sx={commonTextFieldStyles}
+  />
+</Box>
+<Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+  <TextField
+    fullWidth
+    label="Instagram"
+    variant="outlined"
+    value={socialLinks.instagram}
+    onChange={(e) =>
+      setSocialLinks({ ...socialLinks, instagram: e.target.value })
+    }
+    sx={commonTextFieldStyles}
+  />
+</Box>
 
       {/* Uploads */}
       <Box sx={{ display: "flex", gap: 2, mb: 3 }}>

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Typography,
@@ -30,6 +30,7 @@ import { uploadToPinata } from "@/utils/pinataUploader";
 import { useAuth } from "@/context/AuthContext";
 import ConnectWalletPrompt from "@/components/ConnectWalletPrompt";
 import axios from 'axios';
+
 
 const categories = ['Meme', 'DeFi', 'NFT', 'Utility'];
 
@@ -73,7 +74,6 @@ export default function EditPage() {
   const router = useRouter();
   const params = useParams();
   const memeId = params?.memeId;
-  console.log("memeid in edit for navigate to chat....", memeId);
 
   const [name, setName] = useState('');
   const [category, setCategory] = useState('');
@@ -91,8 +91,33 @@ export default function EditPage() {
     name: '',
     symbol: '',
     description: '',
-    tokenAddress: '',
+    tokenAddress: '0x',
   });
+
+
+  useEffect(() => {
+    const fetchMemes = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/memes/${memeId}`
+        );
+        const data = response.data;
+  
+    
+        setName(data.agentName); // Set name
+        setDescription(data.description); // Set description
+        setAvatarImage(data.profileImageUrl); // Set avatar image (adjust key if needed)
+  
+        console.log("memedetail...", data);
+      } catch (error) {
+        console.error("Error fetching meme agent:", error);
+      }
+    };
+  
+    if (memeId) {
+      fetchMemes();
+    }
+  }, [memeId]);
 
   const handleChange = (key: string, value: string) => {
     setSocialLinks((prev) => ({ ...prev, [key]: value }));
@@ -104,6 +129,8 @@ export default function EditPage() {
     { icon: <TelegramIcon />, label: 'Telegram', placeholder: 'https://t.me/undefined', key: 'telegram' },
     
   ];
+
+
 
 
   const { jwtToken } = useAuth();
