@@ -132,7 +132,7 @@ const Sidebar = () => {
             </StyledLink>
           </NavItem>
 
-      
+
 
         </List>
       </Box>
@@ -151,7 +151,7 @@ const Sidebar = () => {
 
         </Button>
 
-<WalletButton/>
+        <WalletButton />
       </Box>
     </SidebarContainer>
   );

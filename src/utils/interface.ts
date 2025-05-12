@@ -16,7 +16,7 @@ export interface MemeAgent {
     createdAt: string; // ISO date string
     updatedAt: string; // ISO date string
     __v: number;
-    agentName : string;
+    name : string;
     category: string;
 
   }

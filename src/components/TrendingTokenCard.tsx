@@ -71,7 +71,7 @@ export default function TrendingTokenCard({ token }: TrendingTokenCardProps) {
     <TokenCard>
       <TokenHeader>
         <TokenImageWrapper>
-          <img src={token?.profileImageUrl} alt={token.agentName} style={{ objectFit: 'cover' }} />
+          <img src={token?.profileImageUrl} alt={token.name} style={{ objectFit: 'cover' }} />
         </TokenImageWrapper>
         <TokenInfo>
           <Typography variant="subtitle1" fontWeight={700}>

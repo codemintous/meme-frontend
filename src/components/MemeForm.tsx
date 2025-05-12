@@ -70,7 +70,7 @@ export default function MemeForm({ onBack }: { onBack: () => void }) {
     }
 
     const payload = {
-      agentName: name,
+      name: name,
       category: "",
       description: description,
       personality: "",
@@ -85,7 +85,7 @@ export default function MemeForm({ onBack }: { onBack: () => void }) {
         name: "",
         symbol: "",
         description: "",
-        tokenAddress: "",
+        tokenAddress: "0x",
       },
     };
 

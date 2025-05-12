@@ -95,6 +95,7 @@ export default function TrendingAgentCard({ agent }: { agent: MemeAgent }) {
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/memes/${agent._id}/like`,
         {
           headers: {
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${jwtToken}`,
           },
         }
@@ -138,7 +139,7 @@ export default function TrendingAgentCard({ agent }: { agent: MemeAgent }) {
       <Link href={`/${agent._id}`} style={{ textDecoration: 'none' }}>
         <BottomOverlay>
           <Box>
-            <AgentName>{agent.agentName}</AgentName>
+            <AgentName>{agent.name}</AgentName>
             <AgentCategory>{agent.category}</AgentCategory>
           </Box>
           <AgentDescription>

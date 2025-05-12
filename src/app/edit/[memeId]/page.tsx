@@ -16,10 +16,11 @@ import {
   Edit as EditIcon,
   Add as AddIcon,
   ContentCopy as CopyIcon,
+  Facebook,
 } from '@mui/icons-material';
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
-import TelegramIcon from '@mui/icons-material/Telegram';
+
 import TwitterIcon from '@mui/icons-material/X';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import ImageUploadSection from '@/components/ImageUploadSection';
@@ -81,8 +82,8 @@ export default function EditPage() {
   const [personality, setPersonality] = useState('');
   const [socialLinks, setSocialLinks] = useState({
     twitter: '',
-    telegram: '',
     instagram: '',
+    facebook: '',
   });
 
 
@@ -104,7 +105,7 @@ export default function EditPage() {
         const data = response.data;
   
     
-        setName(data.agentName); // Set name
+        setName(data.name); // Set name
         setDescription(data.description); // Set description
         setAvatarImage(data.profileImageUrl); // Set avatar image (adjust key if needed)
   
@@ -126,7 +127,7 @@ export default function EditPage() {
   const socials = [
     { icon: <TwitterIcon />, label: 'X', placeholder: 'https://x.com/undefined', key: 'twitter' },
     { icon: <InstagramIcon />, label: 'Instagram', placeholder: 'https://instagram.com/undefined', key: 'instagram' },
-    { icon: <TelegramIcon />, label: 'Telegram', placeholder: 'https://t.me/undefined', key: 'telegram' },
+    { icon: <Facebook />, label: 'Facebook', placeholder: 'https://t.me/undefined', key: 'facebook' },
     
   ];
 
@@ -171,14 +172,14 @@ export default function EditPage() {
 
   const handleSubmit = async () => {
     const payload = {
-      agentName: name,
+      name: name,
       category,
       description,
       personality,
       socialMediaLinks: {
         twitter: socialLinks.twitter,
         instagram: socialLinks.instagram,
-        facebook: socialLinks.telegram,
+        facebook: socialLinks.facebook,
       },
       profileImageUrl: avatarImage,
       coverImageUrl: bgImage,
@@ -186,8 +187,8 @@ export default function EditPage() {
     };
 
     try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/memes`,
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/memes/${memeId}`,
         payload,
         {
           headers: {
@@ -199,6 +200,7 @@ export default function EditPage() {
 
       console.log('Meme created successfully:', response.data);
       setTokenDetails(response.data);
+      router.push(`/launchtoken/${memeId}`);
     
     } catch (error) {
       console.error('Error creating meme:', error);

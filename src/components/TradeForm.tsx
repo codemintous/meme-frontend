@@ -3,6 +3,8 @@ import { Box, Typography, Tabs, Tab, TextField, Button } from "@mui/material";
 import { useState } from "react";
 import factory_contract_abi from "@/data/factory_contract_abi.json"
 import { BrowserProvider, Contract, parseEther } from "ethers";
+import { useAccount } from "wagmi";
+import WalletButton from "./WalletButton";
 
 interface TradeFormProps {
   tokenName: string;
@@ -24,13 +26,13 @@ export default function TradeForm({
   onSubmit,
 }: TradeFormProps) {
   const [mode, setMode] = useState<"buy" | "sell">("buy");
-  const [amount, setAmount] = useState<number>(0);
-  const [slippage, setSlippage] = useState<number>(0);
-
+  const [amount, setAmount] = useState<string>(''); // not string | number
+  const [slippage, setSlippage] = useState<string>('');
+  const { isConnected } = useAccount();
 
   const handleBuy = async () => {
     try {
-     
+
       // Request account access if needed
       await window.ethereum.request({ method: 'eth_requestAccounts' });
 
@@ -40,10 +42,10 @@ export default function TradeForm({
       const signer = await provider.getSigner();
       const userAddress = await signer.getAddress();
       console.log("Connected user:", userAddress);
-  
+
       const network = await provider.getNetwork();
       console.log("Connected to network:", network);
-  
+
       const contract = new Contract(
         process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS!,
         factory_contract_abi,
@@ -57,12 +59,12 @@ export default function TradeForm({
       console.log("token address...........", tokenAddress);
       const totalCost = (parseInt(amount.toString()) * 0.0001).toString();
 
-      const tx = await contract.buyTokens(tokenAddress, parseEther(amount.toString()), 
-      {
-        value: parseEther(totalCost)
-      }
-    );
-      
+      const tx = await contract.buyTokens(tokenAddress, parseEther(amount.toString()),
+        {
+          value: parseEther(totalCost)
+        }
+      );
+
       console.log("buy cost..................", parseEther(totalCost));
       console.log("Transaction sent:", tx.hash);
 
@@ -85,10 +87,10 @@ export default function TradeForm({
       const signer = await provider.getSigner();
       const userAddress = await signer.getAddress();
       console.log("Connected user:", userAddress);
-  
+
       const network = await provider.getNetwork();
       console.log("Connected to network:", network);
-  
+
       if (!tokenAddress) {
         console.error("Token address is undefined.");
         return;
@@ -99,9 +101,9 @@ export default function TradeForm({
         factory_contract_abi,
         signer
       );
-     
+
       const tx = await contract.sellTokens(tokenAddress, parseEther(amount.toString()));
-      
+
       console.log("Sell transaction sent:", tx.hash);
 
       const receipt = await tx.wait();
@@ -114,12 +116,14 @@ export default function TradeForm({
   };
 
   const handleSubmit = () => {
+    const parsedAmount = parseFloat(amount as string) || 0;
+    const parsedSlippage = parseFloat(slippage as string) || 0;
     if (mode === "buy") {
       handleBuy();
     } else {
       handleSell();
     }
-    onSubmit(mode, amount, slippage);
+    onSubmit(mode, parsedAmount, parsedSlippage);
   };
   return (
     <Box display="flex" flexDirection="column" gap={2}>
@@ -181,41 +185,49 @@ export default function TradeForm({
         size="small"
         label="Tokens"
         value={amount}
-        onChange={(e) => setAmount(Number(e.target.value))}
+        onChange={(e) => setAmount(e.target.value)}
         InputProps={{ sx: { color: "white" } }}
         InputLabelProps={{ sx: { color: "white" } }}
         sx={{ backgroundColor: "#2b2b2b", borderRadius: 1 }}
       />
+      {mode === "buy" ? (
+        <Typography variant="body2" sx={{ color: "white" }}>
+          You will be charged {(Number(amount) * 0.0001)} base sepolia
+        </Typography>
+      ) : (
+        <Typography variant="body2" sx={{ color: "white" }}>
+          You will get {(Number(amount) * 0.0001)} base sepolia
+        </Typography>
+      )}
       <TextField
         type="number"
         variant="outlined"
         size="small"
         label="Slippage %"
         value={slippage}
-        onChange={(e) => setSlippage(Number(e.target.value))}
+        onChange={(e) => setSlippage(e.target.value)}
         InputProps={{ sx: { color: "white" } }}
         InputLabelProps={{ sx: { color: "white" } }}
         sx={{ backgroundColor: "#2b2b2b", borderRadius: 1 }}
       />
 
-      <Button
-        variant="contained"
-        color={mode === "buy" ? "secondary" : "error"}
-        fullWidth
-        sx={{ mt: "auto" }}
-        onClick={handleSubmit}
-      >
-        {mode === "buy" ? "Buy" : "Sell"}
-      </Button>
+      {!isConnected ? (
+     
+          <WalletButton/>
+      
+      ) : (
+        <Button
+          variant="contained"
+          color={mode === "buy" ? "secondary" : "error"}
+          fullWidth
+          sx={{ mt: "auto" }}
+          onClick={handleSubmit}
+        >
+          {mode === "buy" ? "Buy" : "Sell"}
+        </Button>
+      )}
+
     </Box>
   );
 }
 
-
-
-// {
-//   "tokenAddress": "0x82E5556AAe3cE3810ac9AEFe76F80cf7567BFd5D",
-//   "name": "MemeFiesta",
-//   "symbol": "ROFL",
-//   "description": "MemeFiesta ($ROFL) is the ultimate meme-powered token that fuels laughter across the internet."
-// }

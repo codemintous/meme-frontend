@@ -101,7 +101,7 @@ const MyMemesCard = ({ meme }: { meme: MemeAgent }) => {
   <CardMedia
     component="img"
     image={meme.profileImageUrl}
-    alt={meme?.agentName || "Meme Image"}
+    alt={meme?.name|| "Meme Image"}
     sx={{ height: 200 }}
   />
 ) : (
@@ -110,7 +110,7 @@ const MyMemesCard = ({ meme }: { meme: MemeAgent }) => {
 
       <CardContent>
         <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-          {meme?.agentName}
+          {meme?.name}
         </Typography>
         <Typography variant="body2" color="gray">
           {meme?.description}

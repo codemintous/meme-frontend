@@ -17,7 +17,9 @@ import { useParams } from "next/navigation";
 import factory_contract_abi from "@/data/factory_contract_abi.json"
 import { BrowserProvider, Contract, Interface, LogDescription, parseUnits } from "ethers";
 import axios from "axios";
-export default function LaunchTokenPage() { 
+import { useRouter } from "next/navigation";
+
+export default function LaunchTokenPage() {
 
 
   const [iconImage, setIconImage] = useState<string | null>(null);
@@ -28,171 +30,172 @@ export default function LaunchTokenPage() {
   const [supply, setSupply] = useState("");
   // const [memeDetail , setMemeDetail] = useState<MemeAgent | null>(null)
   const iconInputRef = React.useRef<HTMLInputElement>(null);
-const bannerInputRef = React.useRef<HTMLInputElement>(null);
+  const bannerInputRef = React.useRef<HTMLInputElement>(null);
   const [socialLinks, setSocialLinks] = useState({
     twitter: '',
-    telegram: '',
     instagram: '',
+    facebook: '',
   });
 
+  const router =  useRouter();
+  const param = useParams();
+  const id = param.id;
 
-const param = useParams();
-const id = param.id;
+  useEffect(() => {
+    const fetchMemes = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/memes/${id}`
+        );
+        const data = response.data;
 
-useEffect(() => {
-  const fetchMemes = async () => {
+        // setMemeDetail(data); // Save full object
+
+        setIconImage(data.profileImageUrl); // Set avatar image (adjust key if needed)
+        setBannerImage(data.coverImageUrl);
+        setSocialLinks({
+          twitter: data.socialMediaLinks.twitter || '',
+          instagram: data.socialMediaLinks.instagram || '',
+          facebook: data.socialMediaLinks.facebook || '',
+        });
+        console.log("memedetail...", data);
+      } catch (error) {
+        console.error("Error fetching meme agent:", error);
+      }
+    };
+
+    if (id) {
+      fetchMemes();
+    }
+  }, [id]);
+
+
+
+
+  const { jwtToken } = useAuth();
+
+  if (!jwtToken) {
+    return (
+      <ConnectWalletPrompt />
+    );
+  }
+
+  const updateTokenDetails = async (tokenAddress: string) => {
+    if (!jwtToken) {
+      console.error("No JWT token available");
+      return;
+    }
+
     try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/memes/${id}`
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/memes/${id}`,
+        {
+          tokenDetails: {
+            tokenAddress,
+            name: tokenName,
+            symbol: tokenSymbol,
+            description: tokenDesc,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${jwtToken}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
-      const data = response.data;
 
-      // setMemeDetail(data); // Save full object
-      
-      setIconImage(data.profileImageUrl); // Set avatar image (adjust key if needed)
-      setBannerImage(data.coverImageUrl);
-      // setSocialLinks({
-      //   twitter: data.|| '',
-      //   telegram: data.telegram || '',
-      //   instagram: data.instagram || '',
-      // });
-      console.log("memedetail...", data);
-    } catch (error) {
-      console.error("Error fetching meme agent:", error);
+      console.log("✅ Meme agent updated with token info:", response.data);
+      router.push(`/${id}`);
+    } catch (err) {
+      console.error("❌ Failed to update meme with token info:", err);
     }
   };
 
-  if (id) {
-    fetchMemes();
-  }
-}, [id]);
+  const handleLaunchToken = async () => {
+    try {
+      const provider = new BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const userAddress = await signer.getAddress();
+      console.log("Connected user:", userAddress);
 
+      const network = await provider.getNetwork();
+      console.log("Connected to network:", network);
 
+      const contract = new Contract(
+        process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS!,
+        factory_contract_abi,
+        signer
+      );
 
+      console.log("Factory address:", process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS);
 
-const { jwtToken } = useAuth();
+      const tx = await contract.launchToken(
+        tokenName,
+        tokenSymbol,
+        parseUnits(supply, 18),
+        parseUnits("1", 14)
+      );
 
-if (!jwtToken) {
-  return (
-    <ConnectWalletPrompt/>
-  );
-}
+      console.log("Transaction sent:", tx.hash);
+      const receipt = await tx.wait();
+      console.log("Transaction mined:", receipt);
 
-const updateTokenDetails = async (tokenAddress: string) => {
-  if (!jwtToken) {
-    console.error("No JWT token available");
-    return;
-  }
+      const iface = new Interface(factory_contract_abi);
+      let tokenAddress: string | null = null;
 
-  try {
-    const response = await axios.put(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/memes/${id}`,
-      {
-        tokenDetails: {
-          tokenAddress,
-          name: tokenName,
-          symbol: tokenSymbol,
-          description: tokenDesc,
-        },
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${jwtToken}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    console.log("✅ Meme agent updated with token info:", response.data);
-  } catch (err) {
-    console.error("❌ Failed to update meme with token info:", err);
-  }
-};
-
-const handleLaunchToken = async () => {
-  try {
-    const provider = new BrowserProvider(window.ethereum);
-    const signer = await provider.getSigner();
-    const userAddress = await signer.getAddress();
-    console.log("Connected user:", userAddress);
-
-    const network = await provider.getNetwork();
-    console.log("Connected to network:", network);
-
-    const contract = new Contract(
-      process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS!,
-      factory_contract_abi,
-      signer
-    );
-
-    console.log("Factory address:", process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS);
-
-    const tx = await contract.launchToken(
-      tokenName,
-      tokenSymbol,
-      parseUnits(supply,18),
-      parseUnits("1", 14)
-    );
-
-    console.log("Transaction sent:", tx.hash);
-    const receipt = await tx.wait();
-    console.log("Transaction mined:", receipt);
-
-    const iface = new Interface(factory_contract_abi);
-    let tokenAddress: string | null = null;
-
-    for (const log of receipt.logs) {
-      try {
-        const parsed = iface.parseLog(log) as LogDescription;
-        if (parsed.name === "TokenLaunched") {
-          tokenAddress = parsed.args.token;
-          console.log("🚀 Token launched!", tokenAddress);
-          break;
+      for (const log of receipt.logs) {
+        try {
+          const parsed = iface.parseLog(log) as LogDescription;
+          if (parsed.name === "TokenLaunched") {
+            tokenAddress = parsed.args.token;
+            console.log("🚀 Token launched!", tokenAddress);
+            break;
+          }
+        } catch (err) {
+          // log did not match ABI, skip
+          console.log(err);
         }
-      } catch (err) {
-        // log did not match ABI, skip
-        console.log(err);
       }
+
+      if (tokenAddress) {
+        console.log("✅ Token Address found:", tokenAddress);
+        await updateTokenDetails(tokenAddress);
+      } else {
+        console.warn("⚠️ No TokenLaunched event found — skipping API update");
+      }
+
+    } catch (error) {
+      console.error("❌ Launch token failed:", error);
+    }
+  };
+
+
+  const handleUploadClick = (type: "icon" | "banner") => {
+    const inputRef = type === "icon" ? iconInputRef : bannerInputRef;
+    inputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: "icon" | "banner") => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const previewUrl = URL.createObjectURL(file); // ✅ local preview
+
+    if (type === "icon") {
+      setIconImage(previewUrl);
+    }
+    if (type === "banner") {
+      setBannerImage(previewUrl);
     }
 
-    if (tokenAddress) {
-      console.log("✅ Token Address found:", tokenAddress);
-      await updateTokenDetails(tokenAddress);
-    } else {
-      console.warn("⚠️ No TokenLaunched event found — skipping API update");
+    try {
+      const ipfsHash = await uploadToPinata(file);
+      console.log("Uploaded to IPFS:", ipfsHash);
+    } catch (error) {
+      console.error(error);
     }
-
-  } catch (error) {
-    console.error("❌ Launch token failed:", error);
-  }
-};
-
-
-const handleUploadClick = (type: "icon" | "banner") => {
-  const inputRef = type === "icon" ? iconInputRef : bannerInputRef;
-  inputRef.current?.click();
-};
-
-const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: "icon" | "banner") => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-
-  const previewUrl = URL.createObjectURL(file); // ✅ local preview
-
-  if (type === "icon") {
-    setIconImage(previewUrl);
-  } 
-  if (type === "banner"){
-    setBannerImage(previewUrl);
-  }
-
-  try {
-    const ipfsHash = await uploadToPinata(file);
-    console.log("Uploaded to IPFS:", ipfsHash);
-  } catch (error) {
-    console.error(error);
-  }
-};
+  };
 
 
 
@@ -216,23 +219,23 @@ const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: "i
 
       {/* Token Info */}
       <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
-      <TextField
-  fullWidth
-  label="Token Name"
-  variant="outlined"
-  value={tokenName}
-  onChange={(e) => setTokenName(e.target.value)}
-  sx={commonTextFieldStyles}
-/>
+        <TextField
+          fullWidth
+          label="Token Name"
+          variant="outlined"
+          value={tokenName}
+          onChange={(e) => setTokenName(e.target.value)}
+          sx={commonTextFieldStyles}
+        />
 
-<TextField
-  fullWidth
-  label="Token Symbol"
-  variant="outlined"
-  value={tokenSymbol}
-  onChange={(e) => setTokenSymbol(e.target.value)}
-  sx={commonTextFieldStyles}
-/>
+        <TextField
+          fullWidth
+          label="Token Symbol"
+          variant="outlined"
+          value={tokenSymbol}
+          onChange={(e) => setTokenSymbol(e.target.value)}
+          sx={commonTextFieldStyles}
+        />
       </Box>
 
       {/* Description */}
@@ -250,125 +253,125 @@ const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: "i
       {/* Links */}
       <Typography sx={{ mb: 1 }}>Links</Typography>
       <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
-  <TextField
-    fullWidth
-    label="Telegram"
-    variant="outlined"
-    value={socialLinks.telegram}
-    onChange={(e) =>
-      setSocialLinks({ ...socialLinks, telegram: e.target.value })
-    }
-    sx={commonTextFieldStyles}
-  />
-  <TextField
-    fullWidth
-    label="Twitter"
-    variant="outlined"
-    value={socialLinks.twitter}
-    onChange={(e) =>
-      setSocialLinks({ ...socialLinks, twitter: e.target.value })
-    }
-    sx={commonTextFieldStyles}
-  />
-</Box>
-<Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-  <TextField
-    fullWidth
-    label="Instagram"
-    variant="outlined"
-    value={socialLinks.instagram}
-    onChange={(e) =>
-      setSocialLinks({ ...socialLinks, instagram: e.target.value })
-    }
-    sx={commonTextFieldStyles}
-  />
-</Box>
+        <TextField
+          fullWidth
+          label="facebook"
+          variant="outlined"
+          value={socialLinks.facebook}
+          onChange={(e) =>
+            setSocialLinks({ ...socialLinks, facebook: e.target.value })
+          }
+          sx={commonTextFieldStyles}
+        />
+        <TextField
+          fullWidth
+          label="Twitter"
+          variant="outlined"
+          value={socialLinks.twitter}
+          onChange={(e) =>
+            setSocialLinks({ ...socialLinks, twitter: e.target.value })
+          }
+          sx={commonTextFieldStyles}
+        />
+      </Box>
+      <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+        <TextField
+          fullWidth
+          label="Instagram"
+          variant="outlined"
+          value={socialLinks.instagram}
+          onChange={(e) =>
+            setSocialLinks({ ...socialLinks, instagram: e.target.value })
+          }
+          sx={commonTextFieldStyles}
+        />
+      </Box>
 
       {/* Uploads */}
       <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-      {["icon", "banner"].map((type) => {
-        const image = type === "icon" ? iconImage : bannerImage;
-        const inputRef = type === "icon" ? iconInputRef : bannerInputRef;
+        {["icon", "banner"].map((type) => {
+          const image = type === "icon" ? iconImage : bannerImage;
+          const inputRef = type === "icon" ? iconInputRef : bannerInputRef;
 
-        return (
-          <Box
-            key={type}
-            onClick={() => !image && handleUploadClick(type as "icon" | "banner")}
-            sx={{
-              position: "relative",
-              border: "1px solid #ccc",
-              borderRadius: 2,
-              width: "50%",
-              height: 120,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              overflow: "hidden",
-              cursor: image ? "default" : "pointer",
-            }}
-          >
-            <input
-              ref={inputRef}
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={(e) => handleFileChange(e, type as "icon" | "banner")}
-            />
-            {image ? (
-              <>
-<Image
-  src={image}
-  alt={`${type} preview`}
-  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-  fill
-  unoptimized
-/>
-                <IconButton
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (type === "icon") {
-                      setIconImage(null);
-                    } else {
-                      setBannerImage(null);
-                    }
-                  }}
-                  
+          return (
+            <Box
+              key={type}
+              onClick={() => !image && handleUploadClick(type as "icon" | "banner")}
+              sx={{
+                position: "relative",
+                border: "1px solid #ccc",
+                borderRadius: 2,
+                width: "50%",
+                height: 120,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+                cursor: image ? "default" : "pointer",
+              }}
+            >
+              <input
+                ref={inputRef}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(e) => handleFileChange(e, type as "icon" | "banner")}
+              />
+              {image ? (
+                <>
+                  <Image
+                    src={image}
+                    alt={`${type} preview`}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    fill
+                    unoptimized
+                  />
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (type === "icon") {
+                        setIconImage(null);
+                      } else {
+                        setBannerImage(null);
+                      }
+                    }}
+
+                    sx={{
+                      position: "absolute",
+                      top: 4,
+                      right: 4,
+                      backgroundColor: "rgba(0, 0, 0, 0.6)",
+                      color: "#fff",
+                      zIndex: 1,
+                    }}
+                  >
+                    <Close fontSize="small" />
+                  </IconButton>
+                </>
+              ) : (
+                <Box
                   sx={{
-                    position: "absolute",
-                    top: 4,
-                    right: 4,
-                    backgroundColor: "rgba(0, 0, 0, 0.6)",
-                    color: "#fff",
-                    zIndex: 1,
+                    textAlign: "center",
+                    color: "#888",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
                   }}
                 >
-                  <Close fontSize="small" />
-                </IconButton>
-              </>
-            ) : (
-              <Box
-                sx={{
-                  textAlign: "center",
-                  color: "#888",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                }}
-              >
-                <CloudUpload />
-                <Typography variant="body2" mt={1}>
-                  Upload {type === "icon" ? "Icon" : "Banner"}
-                </Typography>
-              </Box>
-            )}
-          </Box>
-        );
-      })}
-    </Box>
+                  <CloudUpload />
+                  <Typography variant="body2" mt={1}>
+                    Upload {type === "icon" ? "Icon" : "Banner"}
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          );
+        })}
+      </Box>
 
 
-    
+
       <Divider sx={{ borderColor: "gray", mb: 2 }} />
       <Typography variant="subtitle2" sx={{ mb: 1 }}>
         Supply
@@ -377,38 +380,36 @@ const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: "i
         Optional: Be the very first person to buy your token!
       </Typography>
       <TextField
-  fullWidth
-  type="number"
-  placeholder="0"
-  value={supply}
-  onChange={(e) => setSupply(e.target.value)}
-  sx={{ mb: 1, ...commonTextFieldStyles }}
-/>
-      <Typography variant="caption" sx={{ color: "gray" }}>
-        You spend 0 to receive your newly created tokens.
-      </Typography>
+        fullWidth
+        type="number"
+        placeholder="0"
+        value={supply}
+        onChange={(e) => setSupply(e.target.value)}
+        sx={{ mb: 1, ...commonTextFieldStyles }}
+      />
+     
 
       <Box
-  sx={{
-    display: "flex",
-    justifyContent: "center",
-    mt: 4, // margin-top to create spacing from the form
-  }}
->
-  <Button
-    variant="contained"
-    onClick={handleLaunchToken}
-    sx={{
-      bgcolor: "#7f5af0",
-      textTransform: "none",
-      fontWeight: "bold",
-      "&:hover": { bgcolor: "#6848d8" },
-      width: "fit-content",
-    }}
-  >
-    Launch
-  </Button>
-</Box>
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          mt: 4, // margin-top to create spacing from the form
+        }}
+      >
+        <Button
+          variant="contained"
+          onClick={handleLaunchToken}
+          sx={{
+            bgcolor: "#7f5af0",
+            textTransform: "none",
+            fontWeight: "bold",
+            "&:hover": { bgcolor: "#6848d8" },
+            width: "fit-content",
+          }}
+        >
+          Launch
+        </Button>
+      </Box>
 
 
     </Box>

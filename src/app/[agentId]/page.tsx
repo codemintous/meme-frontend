@@ -28,12 +28,14 @@ import Link from 'next/link';
 import VideoIcon from '@mui/icons-material/VideoCall';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { uploadToPinata } from "@/utils/pinataUploader";
-import { useAuth } from "@/context/AuthContext";
-import ConnectWalletPrompt from "@/components/ConnectWalletPrompt";
+// import { useAuth } from "@/context/AuthContext";
+;
 import { MemeAgent } from '@/utils/interface';
 import axios from 'axios';
 import { Dialog, DialogActions, DialogContent } from "@mui/material";
 import TradeForm from "@/components/TradeForm"; // Import your TradeForm component
+import { useAccount } from 'wagmi';
+import WalletButton from '@/components/WalletButton';
 
 
 
@@ -44,37 +46,38 @@ export default function AgentDetailPage() {
     const [messages, setMessages] = useState<{ text: string; sender: 'user' | 'bot' | 'loading' | 'image' }[]>([]);
     const [selectedMode, setSelectedMode] = useState('Chat');
     const [popupOpen, setPopupOpen] = useState(false);
-    const [memeDetail , setMemeDetail] = useState<MemeAgent | null>(null)
+    const [memeDetail, setMemeDetail] = useState<MemeAgent | null>(null);
+    const [isShowWalletModal, setIsShowWalletModal] = useState<boolean>(false); // State for showing wallet modal
     const [popupTrade, setPopupTrade] = useState(false);
     const open = Boolean(anchorEl);
     const router = useRouter();
     const params = useParams();
     const agentId = params?.agentId;
-    const { jwtToken } = useAuth();
-
+    // const { jwtToken } = useAuth();
+    const { isConnected } = useAccount();
 
 
     useEffect(() => {
         const fetchMemes = async () => {
-          try {
-            const response = await axios.get(
-              `${process.env.NEXT_PUBLIC_BASE_URL}/api/memes/${agentId}`
-            );
-            setMemeDetail(response.data); // assuming response.data is the object for a single meme
-            console.log("memedetail...",response.data);
-           
-          } catch (error) {
-            console.error("Error fetching meme agent:", error);
-          }
+            try {
+                const response = await axios.get(
+                    `${process.env.NEXT_PUBLIC_BASE_URL}/api/memes/${agentId}`
+                );
+                setMemeDetail(response.data); // assuming response.data is the object for a single meme
+                console.log("memedetail...", response.data);
+
+            } catch (error) {
+                console.error("Error fetching meme agent:", error);
+            }
         };
-      
+
         if (agentId) {
-          fetchMemes();
+            fetchMemes();
         }
-      }, [agentId]);
+    }, [agentId]);
 
 
-      
+
 
     const handleTradeSubmit = (mode: "buy" | "sell", amount: number, slippage: number) => {
         console.log("Trade submitted:", { mode, amount, slippage });
@@ -83,9 +86,6 @@ export default function AgentDetailPage() {
     };
 
 
-    if (!jwtToken) {
-        return <ConnectWalletPrompt />;
-    }
 
 
 
@@ -152,13 +152,13 @@ export default function AgentDetailPage() {
                     <Box display="flex" alignItems="center" gap={2}>
                         <Avatar src={`${memeDetail?.profileImageUrl}`} alt="BigBrainPepe" sx={{ width: 56, height: 56 }} />
                         <Box>
-                            <Typography variant="h6" color="white">{memeDetail?.agentName}</Typography>
+                            <Typography variant="h6" color="white">{memeDetail?.name}</Typography>
                             <Typography variant="body2" color="gray">{memeDetail?.description}</Typography>
                         </Box>
                     </Box>
                     <Box display="flex" flexDirection="column" alignItems="end" gap={2}>
                         <Stack direction="row" spacing={1} alignItems="center">
-                        <Button
+                            <Button
                                 variant="contained"
                                 sx={{
                                     backgroundColor: 'white',
@@ -171,7 +171,7 @@ export default function AgentDetailPage() {
                                 }}
                                 onClick={() => setPopupTrade(true)}
                             >
-                               Transact
+                                Transact
                             </Button>
                             <IconButton sx={{ color: 'white' }} onClick={() => setPopupOpen(true)}>
                                 <Info />
@@ -307,12 +307,19 @@ export default function AgentDetailPage() {
                 {/* Prompt & Chat Input */}
                 <Box mt={2} display="flex" gap={1} alignItems="center">
                     <TextField
-                        placeholder="Have a conversation with BigBrainPepe..."
+                        placeholder={
+                            !isConnected
+                                ? 'Connect your wallet first...'
+                                : `Message ${memeDetail?.name}...`
+                        }
                         fullWidth
                         variant="outlined"
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                        // onFocus={() => {
+                        //     if (!isConnected) setIsShowWalletModal(true);
+                        // }}
                         sx={{
                             bgcolor: '#181818',
                             borderRadius: '6px',
@@ -465,37 +472,67 @@ export default function AgentDetailPage() {
             </Box>
 
             <Dialog
-  open={popupTrade}
-  onClose={() => setPopupTrade(false)}
-  PaperProps={{
-    sx: {
-      backgroundColor: "#1e1e1e", // Dark background
-      borderRadius: 3,           // Rounded corners (theme.spacing(3))
-      p: 1,                      // Padding inside
-      color: "white",           // Optional: white text
-      minWidth: 360             // Optional: match width from screenshot
-    },
-  }}
->
-  <DialogContent>
-    <TradeForm
-      tokenName={memeDetail?.tokenDetails.name || ""}
-      tokenSymbol={memeDetail?.tokenDetails.symbol || ""}
-      tokenAddress= {memeDetail?.tokenDetails.tokenAddress || ""}
-      chain={"base"}
-      price={0}
-      marketCap={""}
-      onSubmit={handleTradeSubmit}
-    />
-  </DialogContent>
-  <DialogActions>
-    <Button onClick={() => setPopupTrade(false)} sx={{ color: "#aaa" }}>
-      Close
-    </Button>
-  </DialogActions>
-</Dialog>
+                open={popupTrade}
+                onClose={() => setPopupTrade(false)}
+                PaperProps={{
+                    sx: {
+                        backgroundColor: "#1e1e1e", // Dark background
+                        borderRadius: 3,           // Rounded corners (theme.spacing(3))
+                        p: 1,                      // Padding inside
+                        color: "white",           // Optional: white text
+                        minWidth: 360             // Optional: match width from screenshot
+                    },
+                }}
+            >
+                <DialogContent>
+                    <TradeForm
+                        tokenName={memeDetail?.tokenDetails.name || ""}
+                        tokenSymbol={memeDetail?.tokenDetails.symbol || ""}
+                        tokenAddress={memeDetail?.tokenDetails.tokenAddress || ""}
+                        chain={"base"}
+                        price={0}
+                        marketCap={""}
+                        onSubmit={handleTradeSubmit}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setPopupTrade(false)} sx={{ color: "#aaa" }}>
+                        Close
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             <AgentPopup open={popupOpen} handleClose={() => setPopupOpen(false)} />
+
+            <Dialog open={isShowWalletModal} onClose={() => setIsShowWalletModal(false)}
+           
+         
+             disableEnforceFocus
+             disableAutoFocus
+             hideBackdrop // optional: for full control
+             sx={{ zIndex: 1000 }} 
+           
+                >
+                <DialogContent
+                    sx={{
+                        bgcolor: '#121212',
+                        color: 'white',
+                        textAlign: 'center',
+                        p: 4,
+                        borderRadius: 2,
+                        
+                    }}
+                >
+                    <Typography variant="h6" mb={2}>
+                        Connect Your Wallet
+                    </Typography>
+                    <Typography variant="body2" mb={3}>
+                        To start chatting and trading, please connect your wallet.
+                    </Typography>
+                    <WalletButton/>
+                </DialogContent>
+            </Dialog>
+
         </Box>
     );
 }
