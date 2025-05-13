@@ -36,7 +36,10 @@ import { Dialog, DialogActions, DialogContent } from "@mui/material";
 import TradeForm from "@/components/TradeForm"; // Import your TradeForm component
 import { useAccount } from 'wagmi';
 import WalletButton from '@/components/WalletButton';
+import { useAuth } from '@/context/AuthContext';
 
+import platform_contract_abi from "@/data/platform_contract_abi.json"
+import { BrowserProvider, Contract, parseEther } from "ethers";
 
 
 export default function AgentDetailPage() {
@@ -49,11 +52,13 @@ export default function AgentDetailPage() {
     const [memeDetail, setMemeDetail] = useState<MemeAgent | null>(null);
     const [isShowWalletModal, setIsShowWalletModal] = useState<boolean>(false); // State for showing wallet modal
     const [popupTrade, setPopupTrade] = useState(false);
+    const [donatePopup, setDonatePopup] = useState(false);
+    const [donateAmount, setDonateAmount] = useState('');
     const open = Boolean(anchorEl);
     const router = useRouter();
     const params = useParams();
     const agentId = params?.agentId;
-    // const { jwtToken } = useAuth();
+    const { jwtToken } = useAuth();
     const { isConnected } = useAccount();
 
 
@@ -77,7 +82,42 @@ export default function AgentDetailPage() {
     }, [agentId]);
 
 
-
+    const handleDonate = async () => {
+        try {
+    
+          // Request account access if needed
+          await window.ethereum.request({ method: 'eth_requestAccounts' });
+          const provider = new BrowserProvider(window.ethereum);
+          const signer = await provider.getSigner();
+          const userAddress = await signer.getAddress();
+          console.log("Connected user:", userAddress);
+    
+          const network = await provider.getNetwork();
+          console.log("Connected to network:", network);
+    
+          const contract = new Contract(
+            process.env.NEXT_PUBLIC_PLATFORMBALANCE_CONTRACT_ADDRESS!,
+            platform_contract_abi,
+            signer
+          );
+    
+          const totalCost = (parseInt(donateAmount.toString()) * 0.0001).toString();
+    
+          const tx = await contract.buyTokens(parseEther(totalCost));
+    
+          console.log("buy cost..................", parseEther(totalCost));
+          console.log("Transaction sent:", tx.hash);
+    
+          const receipt = await tx.wait();
+          console.log("Transaction mined:", receipt);
+    
+    
+        } catch (error) {
+          console.error('Error during buy transaction:', error);
+        } finally {
+          console.log("finally block....");
+        }
+      };
 
     const handleTradeSubmit = (mode: "buy" | "sell", amount: number, slippage: number) => {
         console.log("Trade submitted:", { mode, amount, slippage });
@@ -131,11 +171,33 @@ export default function AgentDetailPage() {
                         ]);
                     }
                 } else {
-                    const botResponseText = `You said: "${inputValue}"`;
-                    setMessages((prev) => [
-                        ...prev.slice(0, -1),
-                        { text: botResponseText, sender: 'bot' as const },
-                    ]);
+                    try {
+                        const response = await axios.post(
+                            `${process.env.NEXT_PUBLIC_BASE_URL}/api/agents/chat`,
+                            {
+                                agentId: agentId,
+                                message: inputValue
+                            },
+                            {
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'Authorization': `Bearer ${jwtToken}` // Uncomment when auth is implemented
+                                }
+                            }
+                        );
+
+                        setMessages((prev) => [
+                            ...prev.slice(0, -1),
+                            { text: response.data.response, sender: 'bot' as const },
+                        ]);
+                    } catch (error) {
+                        console.error('Error sending message:', error);
+                        setMessages((prev) => [
+                            ...prev.slice(0, -1),
+                            { text: 'Sorry, there was an error processing your message.', sender: 'bot' as const },
+                        ]);
+                    }
                 }
             }, 800);
         }
@@ -196,7 +258,7 @@ export default function AgentDetailPage() {
                             boxShadow={3}
                         >
                             <Typography variant="body2" color="white" mr={2}>
-                                <strong>BigBrain</strong> has <strong>0 credits</strong>
+                                <strong>{memeDetail?.name}</strong> has <strong>0 credits</strong>
                             </Typography>
                             <Button
                                 variant="contained"
@@ -209,7 +271,7 @@ export default function AgentDetailPage() {
                                     paddingY: 0.5,
                                     boxShadow: 'none'
                                 }}
-
+                                onClick={() => setDonatePopup(true)}
                             >
                                 Donate
                             </Button>
@@ -281,7 +343,7 @@ export default function AgentDetailPage() {
                                         {msg.sender !== 'user' && ( // Show agent image and name only for agent responses
                                             <Box display="flex" alignItems="center" mt={1}>
                                                 <Avatar src="/agents/meme1.png" alt="Agent Name" sx={{ width: 30, height: 30, mr: 1 }} />
-                                                <Typography variant="body2" color="white">BigBrainPepe</Typography>
+                                                <Typography variant="body2" color="white">{memeDetail?.name}</Typography>
                                             </Box>
                                         )}
                                         <Typography variant="body2" color="white">{msg.text}</Typography>
@@ -505,14 +567,14 @@ export default function AgentDetailPage() {
             <AgentPopup open={popupOpen} handleClose={() => setPopupOpen(false)} />
 
             <Dialog open={isShowWalletModal} onClose={() => setIsShowWalletModal(false)}
-           
-         
-             disableEnforceFocus
-             disableAutoFocus
-             hideBackdrop // optional: for full control
-             sx={{ zIndex: 1000 }} 
-           
-                >
+
+
+                disableEnforceFocus
+                disableAutoFocus
+                hideBackdrop // optional: for full control
+                sx={{ zIndex: 1000 }}
+
+            >
                 <DialogContent
                     sx={{
                         bgcolor: '#121212',
@@ -520,7 +582,7 @@ export default function AgentDetailPage() {
                         textAlign: 'center',
                         p: 4,
                         borderRadius: 2,
-                        
+
                     }}
                 >
                     <Typography variant="h6" mb={2}>
@@ -529,8 +591,57 @@ export default function AgentDetailPage() {
                     <Typography variant="body2" mb={3}>
                         To start chatting and trading, please connect your wallet.
                     </Typography>
-                    <WalletButton/>
+                    <WalletButton />
                 </DialogContent>
+            </Dialog>
+
+            <Dialog
+                open={donatePopup}
+                onClose={() => setDonatePopup(false)}
+                PaperProps={{
+                    sx: {
+                        backgroundColor: "#1e1e1e",
+                        borderRadius: 3,
+
+                        color: "white",
+                        minWidth: 360
+                    },
+                }}
+            >
+                <DialogContent>
+                    <Typography variant="h6" mb={2}>Tokens {memeDetail?.name}</Typography>
+
+                    <TextField
+                        fullWidth
+                        type="number"
+                        variant="outlined"
+                        size="small"
+                        label="Tokens"
+                        value={donateAmount}
+                        onChange={(e) => setDonateAmount(e.target.value)}
+                        InputProps={{ sx: { color: "white" } }}
+                        InputLabelProps={{ sx: { color: "white" } }}
+                        sx={{ backgroundColor: "#2b2b2b", borderRadius: 1 }}
+                    />
+                    <Typography variant="body2" sx={{ color: "white" }}>
+                        You will be charged {(Number(donateAmount) * 0.0001)} base sepolia
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDonatePopup(false)} sx={{ color: "#aaa" }}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={() => {
+                            handleDonate();
+                            console.log('Donating:', donateAmount);
+                            setDonatePopup(false);
+                        }}
+                        sx={{ color: "#9333ea" }}
+                    >
+                        Donate
+                    </Button>
+                </DialogActions>
             </Dialog>
 
         </Box>

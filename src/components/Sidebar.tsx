@@ -27,6 +27,7 @@ import {
 
 import WalletButton from './WalletButton';
 
+
 // Styled components
 const SidebarContainer = styled(Box)(({ theme }) => ({
   position: 'fixed',
@@ -131,7 +132,7 @@ const Sidebar = () => {
               <Typography>About</Typography>
             </StyledLink>
           </NavItem>
-
+          {/* <ConnectAndSIWE/> */}
 
 
         </List>
