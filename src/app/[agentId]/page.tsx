@@ -102,10 +102,13 @@ export default function AgentDetailPage() {
           );
     
           const totalCost = (parseInt(donateAmount.toString()) * 0.0001).toString();
-    
-          const tx = await contract.buyTokens(parseEther(totalCost));
-    
           console.log("buy cost..................", parseEther(totalCost));
+    
+          const tx = await contract.buyTokens({
+            value: parseEther(totalCost)
+        });
+    
+     
           console.log("Transaction sent:", tx.hash);
     
           const receipt = await tx.wait();

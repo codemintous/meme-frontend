@@ -85,7 +85,7 @@ const Sidebar = () => {
       <LogoContainer>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <LogoCircle />
-          <Typography variant="h6" fontWeight="bold">MYMEMES</Typography>
+          <Typography variant="h6" fontWeight="bold">MemeMinto AI</Typography>
         </Box>
         <IconButton color="inherit" size="small">
           <ChevronLeft />
