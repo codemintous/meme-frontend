@@ -26,6 +26,9 @@ import {
 } from 'lucide-react';
 
 import WalletButton from './WalletButton';
+// import { useAccount } from 'wagmi';
+// import { ConnectAndSIWE } from './ConnectAndSIWE';
+
 
 
 // Styled components
@@ -77,6 +80,7 @@ const StyledLink = styled(Link)({
 
 const Sidebar = () => {
 
+  // const { address, isConnected } = useAccount();
 
 
   return (
@@ -140,6 +144,19 @@ const Sidebar = () => {
 
       {/* Bottom Section */}
       <Box sx={{ mt: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <Button
+          variant="outlined"
+          fullWidth
+          startIcon={<Plus size={20} />}
+          sx={{
+            borderColor: '#9333ea',
+            color: '#9333ea',
+           
+          }}
+        >
+          0 MM
+        </Button>
+
         <Button
           variant="contained"
           fullWidth

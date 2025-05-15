@@ -39,7 +39,7 @@ import WalletButton from '@/components/WalletButton';
 import { useAuth } from '@/context/AuthContext';
 
 import platform_contract_abi from "@/data/platform_contract_abi.json"
-import { BrowserProvider, Contract, parseEther } from "ethers";
+import { BrowserProvider, Contract, formatUnits, parseEther } from "ethers";
 
 
 export default function AgentDetailPage() {
@@ -54,12 +54,15 @@ export default function AgentDetailPage() {
     const [popupTrade, setPopupTrade] = useState(false);
     const [donatePopup, setDonatePopup] = useState(false);
     const [donateAmount, setDonateAmount] = useState('');
+    const [tokenBalance, setTokenBalance] = useState<string>('0');
     const open = Boolean(anchorEl);
     const router = useRouter();
     const params = useParams();
     const agentId = params?.agentId;
     const { jwtToken } = useAuth();
-    const { isConnected } = useAccount();
+    const { isConnected , address } = useAccount();
+    const [userImages, setUserImages] = useState<string[]>([]);
+    const [communityImages, setCommunityImages] = useState<string[]>([]);
 
 
     useEffect(() => {
@@ -81,6 +84,74 @@ export default function AgentDetailPage() {
         }
     }, [agentId]);
 
+    const fetchTokenBalance = async (
+        address: string,
+        setTokenBalance: (balance: string) => void
+      ) => {
+        try {
+          if (!window.ethereum) {
+            console.error("Ethereum provider not found.");
+            return;
+          }
+      
+          const provider = new BrowserProvider(window.ethereum);
+          const signer = await provider.getSigner();
+      
+          const contract = new Contract(
+            process.env.NEXT_PUBLIC_PLATFORMBALANCE_CONTRACT_ADDRESS!,
+            platform_contract_abi,
+            signer
+          );
+      
+          const tx = await contract.getTokenBalance(address);
+          const formattedBalance = formatUnits(tx , 0);
+      
+          console.log("User token balance:", formattedBalance , tx);
+          setTokenBalance(formattedBalance);
+        } catch (err) {
+          console.error("Error fetching token balance:", err);
+        }
+      };
+
+    useEffect(() => {
+        if (address) {
+            fetchTokenBalance(address , setTokenBalance);
+        }
+      }, [ isConnected, address]);
+
+    useEffect(() => {
+        const fetchUserImages = async () => {
+            if (tab === 1 && address) { // Only fetch when "By Me" tab is selected and wallet is connected
+                try {
+                    const response = await axios.get(
+                        `${process.env.NEXT_PUBLIC_BASE_URL}/api/history/user/${address}/images`
+                    );
+                    setUserImages(response.data);
+                } catch (error) {
+                    console.error("Error fetching user images:", error);
+                }
+            }
+        };
+
+        fetchUserImages();
+    }, [tab, address]);
+
+    useEffect(() => {
+        const fetchCommunityImages = async () => {
+            if (tab === 0 && agentId) { // Only fetch when "Community" tab is selected
+                try {
+                    const response = await axios.get(
+                        `${process.env.NEXT_PUBLIC_BASE_URL}/api/history/agent/${agentId}/all-images`
+                    );
+                    setCommunityImages(response.data);
+                } catch (error) {
+                    console.error("Error fetching community images:", error);
+                }
+            }
+        };
+
+        fetchCommunityImages();
+    }, [tab, agentId]);
 
     const handleDonate = async () => {
         try {
@@ -113,6 +184,10 @@ export default function AgentDetailPage() {
     
           const receipt = await tx.wait();
           console.log("Transaction mined:", receipt);
+
+          if (userAddress ) {
+            await fetchTokenBalance(userAddress, setTokenBalance);
+          }
     
     
         } catch (error) {
@@ -261,7 +336,7 @@ export default function AgentDetailPage() {
                             boxShadow={3}
                         >
                             <Typography variant="body2" color="white" mr={2}>
-                                <strong>{memeDetail?.name}</strong> has <strong>0 credits</strong>
+                                <strong>mememinto</strong> has <strong>{tokenBalance} credits</strong>
                             </Typography>
                             <Button
                                 variant="contained"
@@ -345,7 +420,7 @@ export default function AgentDetailPage() {
                                     <>
                                         {msg.sender !== 'user' && ( // Show agent image and name only for agent responses
                                             <Box display="flex" alignItems="center" mt={1}>
-                                                <Avatar src="/agents/meme1.png" alt="Agent Name" sx={{ width: 30, height: 30, mr: 1 }} />
+                                                <Avatar src={memeDetail?.profileImageUrl} alt="Agent Name" sx={{ width: 30, height: 30, mr: 1 }} />
                                                 <Typography variant="body2" color="white">{memeDetail?.name}</Typography>
                                             </Box>
                                         )}
@@ -467,30 +542,64 @@ export default function AgentDetailPage() {
                         display: 'flex',
                         flexWrap: 'wrap',
                         gap: 1,
-                        maxHeight: 350, // Limit height for scrolling
-                        overflowY: 'auto', // Allow scrolling vertically
+                        maxHeight: 350,
+                        overflowY: 'auto',
                         '&::-webkit-scrollbar': {
-                            display: 'none', // Hide scrollbar
+                            display: 'none',
                         },
                     }}
                 >
-                    {Array.from({ length: 10 }).map((_, i) => (
-                        <Box
-                            key={i}
-                            width={120}
-                            height={120}
-                            borderRadius={2}
-                            overflow="hidden"
-                            position="relative"
-                        >
-                            <Image
-                                src="/agents/meme1.png"
-                                alt={`meme-${i}`}
-                                layout="fill"
-                                objectFit="cover"
-                            />
-                        </Box>
-                    ))}
+                    {tab === 0 ? (
+                        // Community tab - show agent's community images
+                        communityImages.length > 0 ? (
+                            communityImages.map((imageUrl, i) => (
+                                <Box
+                                    key={i}
+                                    width={120}
+                                    height={120}
+                                    borderRadius={2}
+                                    overflow="hidden"
+                                    position="relative"
+                                >
+                                    <Image
+                                        src={imageUrl}
+                                        alt={`community-meme-${i}`}
+                                        layout="fill"
+                                        objectFit="cover"
+                                    />
+                                </Box>
+                            ))
+                        ) : (
+                            <Typography color="gray" sx={{ width: '100%', textAlign: 'center', mt: 2 }}>
+                                No community images found
+                            </Typography>
+                        )
+                    ) : (
+                        // By Me tab - show user's images
+                        userImages.length > 0 ? (
+                            userImages.map((imageUrl, i) => (
+                                <Box
+                                    key={i}
+                                    width={120}
+                                    height={120}
+                                    borderRadius={2}
+                                    overflow="hidden"
+                                    position="relative"
+                                >
+                                    <Image
+                                        src={imageUrl}
+                                        alt={`user-meme-${i}`}
+                                        layout="fill"
+                                        objectFit="cover"
+                                    />
+                                </Box>
+                            ))
+                        ) : (
+                            <Typography color="gray" sx={{ width: '100%', textAlign: 'center', mt: 2 }}>
+                                {address ? "No images found" : "Connect wallet to view your images"}
+                            </Typography>
+                        )
+                    )}
                 </Box>
                 <Button
                     variant="contained"

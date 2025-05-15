@@ -9,7 +9,7 @@ import { config } from './wagmi'
  
 function Providers(props: { children: ReactNode }) {
   return (
-    <WagmiProvider config={config}>
+  
 
     <OnchainKitProvider
   apiKey={process.env.ONCHAINKIT_API_KEY}
@@ -32,10 +32,11 @@ function Providers(props: { children: ReactNode }) {
       }, 
     },
   }}
->
+>  <WagmiProvider config={config}>
       {props.children}
+      </WagmiProvider>
     </OnchainKitProvider>
-    </WagmiProvider>
+   
   );
 }
 
