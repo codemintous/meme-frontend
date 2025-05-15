@@ -10,7 +10,8 @@ import {
 
   IconButton,
 
-  styled
+  styled,
+  TextField
 } from '@mui/material';
 import {
   ChevronLeft,
@@ -26,10 +27,13 @@ import {
 } from 'lucide-react';
 
 import WalletButton from './WalletButton';
-// import { useAccount } from 'wagmi';
+import { useAccount } from 'wagmi';
+import { useEffect, useState } from 'react';
 // import { ConnectAndSIWE } from './ConnectAndSIWE';
 
-
+import platform_contract_abi from "@/data/platform_contract_abi.json"
+import { BrowserProvider, Contract, formatUnits, parseEther } from "ethers";
+import { Dialog, DialogActions, DialogContent } from "@mui/material";
 
 // Styled components
 const SidebarContainer = styled(Box)(({ theme }) => ({
@@ -80,7 +84,90 @@ const StyledLink = styled(Link)({
 
 const Sidebar = () => {
 
-  // const { address, isConnected } = useAccount();
+  const { address, isConnected } = useAccount();
+  const [tokenBalance, setTokenBalance] = useState<string>('0');
+  const [donatePopup, setDonatePopup] = useState(false);
+  const [donateAmount, setDonateAmount] = useState('');
+
+  const fetchTokenBalance = async (
+    address: string,
+    setTokenBalance: (balance: string) => void
+  ) => {
+    try {
+      if (!window.ethereum) {
+        console.error("Ethereum provider not found.");
+        return;
+      }
+  
+      const provider = new BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+  
+      const contract = new Contract(
+        process.env.NEXT_PUBLIC_PLATFORMBALANCE_CONTRACT_ADDRESS!,
+        platform_contract_abi,
+        signer
+      );
+  
+      const tx = await contract.getTokenBalance(address);
+      const formattedBalance = formatUnits(tx , 0);
+  
+      console.log("User token balance:", formattedBalance , tx);
+      setTokenBalance(formattedBalance);
+    } catch (err) {
+      console.error("Error fetching token balance:", err);
+    }
+  };
+
+useEffect(() => {
+    if (address) {
+        fetchTokenBalance(address , setTokenBalance);
+    }
+  }, [ isConnected, address]);
+
+
+  const handleDonate = async () => {
+    try {
+
+      // Request account access if needed
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const provider = new BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const userAddress = await signer.getAddress();
+      console.log("Connected user:", userAddress);
+
+      const network = await provider.getNetwork();
+      console.log("Connected to network:", network);
+
+      const contract = new Contract(
+        process.env.NEXT_PUBLIC_PLATFORMBALANCE_CONTRACT_ADDRESS!,
+        platform_contract_abi,
+        signer
+      );
+
+      const totalCost = (parseInt(donateAmount.toString()) * 0.0001).toString();
+      console.log("buy cost..................", parseEther(totalCost));
+
+      const tx = await contract.buyTokens({
+        value: parseEther(totalCost)
+    });
+
+ 
+      console.log("Transaction sent:", tx.hash);
+
+      const receipt = await tx.wait();
+      console.log("Transaction mined:", receipt);
+
+      if (userAddress ) {
+        await fetchTokenBalance(userAddress, setTokenBalance);
+      }
+
+
+    } catch (error) {
+      console.error('Error during buy transaction:', error);
+    } finally {
+      console.log("finally block....");
+    }
+  };
 
 
   return (
@@ -153,8 +240,10 @@ const Sidebar = () => {
             color: '#9333ea',
            
           }}
+          onClick={() => setDonatePopup(true)}
+
         >
-          0 MM
+          {tokenBalance} MM
         </Button>
 
         <Button
@@ -171,6 +260,56 @@ const Sidebar = () => {
 
         <WalletButton />
       </Box>
+
+
+       <Dialog
+                      open={donatePopup}
+                      onClose={() => setDonatePopup(false)}
+                      PaperProps={{
+                          sx: {
+                              backgroundColor: "#1e1e1e",
+                              borderRadius: 3,
+      
+                              color: "white",
+                              minWidth: 360
+                          },
+                      }}
+                  >
+                      <DialogContent>
+                          <Typography variant="h6" mb={2}>Add MemeMinto Tokens </Typography>
+      
+                          <TextField
+                              fullWidth
+                              type="number"
+                              variant="outlined"
+                              size="small"
+                              label="Tokens"
+                              value={donateAmount}
+                              onChange={(e) => setDonateAmount(e.target.value)}
+                              InputProps={{ sx: { color: "white" } }}
+                              InputLabelProps={{ sx: { color: "white" } }}
+                              sx={{ backgroundColor: "#2b2b2b", borderRadius: 1 }}
+                          />
+                          <Typography variant="body2" sx={{ color: "white" }}>
+                              You will be charged {(Number(donateAmount) * 0.0001)} base sepolia
+                          </Typography>
+                      </DialogContent>
+                      <DialogActions>
+                          <Button onClick={() => setDonatePopup(false)} sx={{ color: "#aaa" }}>
+                              Cancel
+                          </Button>
+                          <Button
+                              onClick={() => {
+                                  handleDonate();
+                                  console.log('Donating:', donateAmount);
+                                  setDonatePopup(false);
+                              }}
+                              sx={{ color: "#9333ea" }}
+                          >
+                              Add Tokens
+                          </Button>
+                      </DialogActions>
+                  </Dialog>
     </SidebarContainer>
   );
 };

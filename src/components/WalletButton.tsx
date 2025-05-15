@@ -10,16 +10,18 @@ const WalletButton = () => {
 
   return (
     <Box
-
       display="flex"
       alignItems="center"
       justifyContent="center"  
       textAlign="center"
-     
+      sx={{
+        position: 'relative',
+        zIndex: 9999 // Add high z-index to ensure popup appears above other elements
+      }}
     >
-  <Wallet />
-  </Box>
-);
+      <Wallet />
+    </Box>
+  );
 };
 
 export default WalletButton;

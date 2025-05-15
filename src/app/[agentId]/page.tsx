@@ -28,8 +28,7 @@ import Link from 'next/link';
 import VideoIcon from '@mui/icons-material/VideoCall';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { uploadToPinata } from "@/utils/pinataUploader";
-// import { useAuth } from "@/context/AuthContext";
-;
+
 import { MemeAgent } from '@/utils/interface';
 import axios from 'axios';
 import { Dialog, DialogActions, DialogContent } from "@mui/material";
@@ -60,7 +59,7 @@ export default function AgentDetailPage() {
     const params = useParams();
     const agentId = params?.agentId;
     const { jwtToken } = useAuth();
-    const { isConnected , address } = useAccount();
+    const { isConnected, address } = useAccount();
     const [userImages, setUserImages] = useState<string[]>([]);
     const [communityImages, setCommunityImages] = useState<string[]>([]);
 
@@ -87,37 +86,37 @@ export default function AgentDetailPage() {
     const fetchTokenBalance = async (
         address: string,
         setTokenBalance: (balance: string) => void
-      ) => {
+    ) => {
         try {
-          if (!window.ethereum) {
-            console.error("Ethereum provider not found.");
-            return;
-          }
-      
-          const provider = new BrowserProvider(window.ethereum);
-          const signer = await provider.getSigner();
-      
-          const contract = new Contract(
-            process.env.NEXT_PUBLIC_PLATFORMBALANCE_CONTRACT_ADDRESS!,
-            platform_contract_abi,
-            signer
-          );
-      
-          const tx = await contract.getTokenBalance(address);
-          const formattedBalance = formatUnits(tx , 0);
-      
-          console.log("User token balance:", formattedBalance , tx);
-          setTokenBalance(formattedBalance);
+            if (!window.ethereum) {
+                console.error("Ethereum provider not found.");
+                return;
+            }
+
+            const provider = new BrowserProvider(window.ethereum);
+            const signer = await provider.getSigner();
+
+            const contract = new Contract(
+                process.env.NEXT_PUBLIC_PLATFORMBALANCE_CONTRACT_ADDRESS!,
+                platform_contract_abi,
+                signer
+            );
+
+            const tx = await contract.getTokenBalance(address);
+            const formattedBalance = formatUnits(tx, 0);
+
+            console.log("User token balance:", formattedBalance, tx);
+            setTokenBalance(formattedBalance);
         } catch (err) {
-          console.error("Error fetching token balance:", err);
+            console.error("Error fetching token balance:", err);
         }
-      };
+    };
 
     useEffect(() => {
         if (address) {
-            fetchTokenBalance(address , setTokenBalance);
+            fetchTokenBalance(address, setTokenBalance);
         }
-      }, [ isConnected, address]);
+    }, [isConnected, address]);
 
     useEffect(() => {
         const fetchUserImages = async () => {
@@ -155,47 +154,47 @@ export default function AgentDetailPage() {
 
     const handleDonate = async () => {
         try {
-    
-          // Request account access if needed
-          await window.ethereum.request({ method: 'eth_requestAccounts' });
-          const provider = new BrowserProvider(window.ethereum);
-          const signer = await provider.getSigner();
-          const userAddress = await signer.getAddress();
-          console.log("Connected user:", userAddress);
-    
-          const network = await provider.getNetwork();
-          console.log("Connected to network:", network);
-    
-          const contract = new Contract(
-            process.env.NEXT_PUBLIC_PLATFORMBALANCE_CONTRACT_ADDRESS!,
-            platform_contract_abi,
-            signer
-          );
-    
-          const totalCost = (parseInt(donateAmount.toString()) * 0.0001).toString();
-          console.log("buy cost..................", parseEther(totalCost));
-    
-          const tx = await contract.buyTokens({
-            value: parseEther(totalCost)
-        });
-    
-     
-          console.log("Transaction sent:", tx.hash);
-    
-          const receipt = await tx.wait();
-          console.log("Transaction mined:", receipt);
 
-          if (userAddress ) {
-            await fetchTokenBalance(userAddress, setTokenBalance);
-          }
-    
-    
+            // Request account access if needed
+            await window.ethereum.request({ method: 'eth_requestAccounts' });
+            const provider = new BrowserProvider(window.ethereum);
+            const signer = await provider.getSigner();
+            const userAddress = await signer.getAddress();
+            console.log("Connected user:", userAddress);
+
+            const network = await provider.getNetwork();
+            console.log("Connected to network:", network);
+
+            const contract = new Contract(
+                process.env.NEXT_PUBLIC_PLATFORMBALANCE_CONTRACT_ADDRESS!,
+                platform_contract_abi,
+                signer
+            );
+
+            const totalCost = (parseInt(donateAmount.toString()) * 0.0001).toString();
+            console.log("buy cost..................", parseEther(totalCost));
+
+            const tx = await contract.buyTokens({
+                value: parseEther(totalCost)
+            });
+
+
+            console.log("Transaction sent:", tx.hash);
+
+            const receipt = await tx.wait();
+            console.log("Transaction mined:", receipt);
+
+            if (userAddress) {
+                await fetchTokenBalance(userAddress, setTokenBalance);
+            }
+
+
         } catch (error) {
-          console.error('Error during buy transaction:', error);
+            console.error('Error during buy transaction:', error);
         } finally {
-          console.log("finally block....");
+            console.log("finally block....");
         }
-      };
+    };
 
     const handleTradeSubmit = (mode: "buy" | "sell", amount: number, slippage: number) => {
         console.log("Trade submitted:", { mode, amount, slippage });
@@ -447,11 +446,12 @@ export default function AgentDetailPage() {
                 {/* Prompt & Chat Input */}
                 <Box mt={2} display="flex" gap={1} alignItems="center">
                     <TextField
-                        placeholder={
-                            !isConnected
-                                ? 'Connect your wallet first...'
-                                : `Message ${memeDetail?.name}...`
-                        }
+                        // placeholder={
+                        //     !isConnected
+                        //         ? 'Connect your wallet first...'
+                        //         : `Message ${memeDetail?.name}...`
+                        // }
+                        placeholder={`Message ${memeDetail?.name}...`}
                         fullWidth
                         variant="outlined"
                         value={inputValue}
@@ -677,15 +677,10 @@ export default function AgentDetailPage() {
             </Dialog>
 
             <AgentPopup open={popupOpen} handleClose={() => setPopupOpen(false)} />
-
-            <Dialog open={isShowWalletModal} onClose={() => setIsShowWalletModal(false)}
-
-
-                disableEnforceFocus
-                disableAutoFocus
-                hideBackdrop // optional: for full control
-                sx={{ zIndex: 1000 }}
-
+            <Dialog
+                open={isShowWalletModal}
+                onClose={() => setIsShowWalletModal(false)}
+               
             >
                 <DialogContent
                     sx={{
@@ -694,7 +689,6 @@ export default function AgentDetailPage() {
                         textAlign: 'center',
                         p: 4,
                         borderRadius: 2,
-
                     }}
                 >
                     <Typography variant="h6" mb={2}>
@@ -703,7 +697,20 @@ export default function AgentDetailPage() {
                     <Typography variant="body2" mb={3}>
                         To start chatting and trading, please connect your wallet.
                     </Typography>
-                    <WalletButton />
+
+                    <Box display="flex" justifyContent="center" gap={2}>
+                        <WalletButton />
+                        <Button
+                            variant="outlined"
+                            onClick={() => {
+                                console.log('Cancel clicked');
+                                setIsShowWalletModal(false);
+                              }}
+                            sx={{ color: 'white', borderColor: 'white' }}
+                        >
+                            Cancel
+                        </Button>
+                    </Box>
                 </DialogContent>
             </Dialog>
 
