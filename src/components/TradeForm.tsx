@@ -74,27 +74,24 @@ export default function TradeForm({
     const normalizedAddress = normalizeTokenAddress(tokenAddress);
     const factoryAddress = process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS as Address;
     
-    // Let's check the actual ABI to determine the correct parameters
-    console.log('Factory contract ABI:', factory_contract_abi);
+    // Convert amount to a very small value for testing
+    const minAmount = BigInt(1000); // 1000 wei
+    console.log('Using amount:', minAmount.toString(), 'wei');
     
     if (mode === 'buy') {
-      // For buyTokens, we need to pass the token address and the amount
-      const amountInWei = amount ? parseEther(amount.toString()).toString() : '0';
       return [{
         address: factoryAddress,
         abi: factory_contract_abi,
         functionName: 'buyTokens',
-        args: [normalizedAddress, amountInWei], // Adding the amount as the second parameter
-        value: amountInWei, // This is the ETH value to send with the transaction
+        args: [normalizedAddress, minAmount], // token address and amount in wei
+        value: minAmount, // match the amount since it's payable
       }] as unknown as ContractFunctionParameters[];
     } else {
-      // For sellTokens, we need to pass the token address and the amount
-      const amountInWei = amount ? parseEther(amount.toString()).toString() : '0';
       return [{
         address: factoryAddress,
         abi: factory_contract_abi,
         functionName: 'sellTokens',
-        args: [normalizedAddress, amountInWei],
+        args: [normalizedAddress, minAmount], // token address and amount in wei
       }] as unknown as ContractFunctionParameters[];
     }
   }, [tokenAddress, mode, amount]);
@@ -179,11 +176,11 @@ export default function TradeForm({
       />
       {mode === "buy" ? (
         <Typography variant="body2" sx={{ color: "white" }}>
-          You will be charged {(Number(amount) * 0.0001)} base sepolia
+          Gasless transaction - no ETH needed
         </Typography>
       ) : (
         <Typography variant="body2" sx={{ color: "white" }}>
-          You will get {(Number(amount) * 0.0001)} base sepolia
+          Gasless transaction - no ETH needed
         </Typography>
       )}
       <TextField
