@@ -1,10 +1,23 @@
 // components/TradeForm.tsx
-import { Box, Typography, Tabs, Tab, TextField, Button } from "@mui/material";
-import { useState } from "react";
+import { Box, Typography, Tabs, Tab, TextField } from "@mui/material";
+import { useState, useMemo } from "react";
 import factory_contract_abi from "@/data/factory_contract_abi.json"
-import { BrowserProvider, Contract, parseEther } from "ethers";
+import { parseEther } from "ethers";
 import { useAccount } from "wagmi";
 import WalletButton from "./WalletButton";
+import { isValidTokenAddress, normalizeTokenAddress } from "@/utils/tokenUtils";
+import {
+  Transaction,
+  TransactionButton,
+  TransactionStatus,
+  TransactionStatusAction,
+  TransactionStatusLabel,
+} from '@coinbase/onchainkit/transaction';
+import type {
+  TransactionError,
+  TransactionResponse,
+} from '@coinbase/onchainkit/transaction';
+import type { ContractFunctionParameters, Address } from 'viem';
 
 interface TradeFormProps {
   tokenName: string;
@@ -25,106 +38,80 @@ export default function TradeForm({
   tokenAddress,
   onSubmit,
 }: TradeFormProps) {
+  console.log('TradeForm tokenAddress:', tokenAddress);
   const [mode, setMode] = useState<"buy" | "sell">("buy");
-  const [amount, setAmount] = useState<string>(''); // not string | number
+  const [amount, setAmount] = useState<string>('');
   const [slippage, setSlippage] = useState<string>('');
   const { isConnected } = useAccount();
 
-  const handleBuy = async () => {
-    try {
+  // Validate inputs
+  const isValidInput = () => {
+    const parsedAmount = parseFloat(amount);
+    const parsedSlippage = parseFloat(slippage);
 
-      // Request account access if needed
-      await window.ethereum.request({ method: 'eth_requestAccounts' });
-
-
-
-      const provider = new BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const userAddress = await signer.getAddress();
-      console.log("Connected user:", userAddress);
-
-      const network = await provider.getNetwork();
-      console.log("Connected to network:", network);
-
-      const contract = new Contract(
-        process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS!,
-        factory_contract_abi,
-        signer
-      );
-
-      if (!tokenAddress) {
-        console.error("Token address is undefined.");
-        return;
-      }
-      console.log("token address...........", tokenAddress);
-      const totalCost = (parseInt(amount.toString()) * 0.0001).toString();
-
-      const tx = await contract.buyTokens(tokenAddress, parseEther(amount.toString()),
-        {
-          value: parseEther(totalCost)
-        }
-      );
-
-      console.log("buy cost..................", parseEther(totalCost));
-      console.log("Transaction sent:", tx.hash);
-
-      const receipt = await tx.wait();
-      console.log("Transaction mined:", receipt);
-
-
-    } catch (error) {
-      console.error('Error during buy transaction:', error);
-    } finally {
-      console.log("finally block....");
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      alert('Please enter a valid amount');
+      return false;
     }
+
+    if (isNaN(parsedSlippage) || parsedSlippage < 0 || parsedSlippage > 100) {
+      alert('Please enter a valid slippage percentage (0-100)');
+      return false;
+    }
+
+    if (!isValidTokenAddress(tokenAddress)) {
+      alert("This token doesn't have a valid contract address. It may not have been launched yet.");
+      return false;
+    }
+
+    return true;
   };
 
-  const handleSell = async () => {
-    try {
-      await window.ethereum.request({ method: 'eth_requestAccounts' });
-
-      const provider = new BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const userAddress = await signer.getAddress();
-      console.log("Connected user:", userAddress);
-
-      const network = await provider.getNetwork();
-      console.log("Connected to network:", network);
-
-      if (!tokenAddress) {
-        console.error("Token address is undefined.");
-        return;
-      }
-
-      const contract = new Contract(
-        process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS!,
-        factory_contract_abi,
-        signer
-      );
-
-      const tx = await contract.sellTokens(tokenAddress, parseEther(amount.toString()));
-
-      console.log("Sell transaction sent:", tx.hash);
-
-      const receipt = await tx.wait();
-      console.log("Sell transaction confirmed:", receipt);
-    } catch (error) {
-      console.error('Error during sell transaction:', error);
-    } finally {
-      console.log("Sell finally block....");
-    }
-  };
-
-  const handleSubmit = () => {
-    const parsedAmount = parseFloat(amount as string) || 0;
-    const parsedSlippage = parseFloat(slippage as string) || 0;
-    if (mode === "buy") {
-      handleBuy();
+  // Create contract parameters for onchainkit Transaction
+  const contracts = useMemo(() => {
+    if (!isValidTokenAddress(tokenAddress)) return [];
+    
+    const normalizedAddress = normalizeTokenAddress(tokenAddress);
+    const factoryAddress = process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS as Address;
+    
+    // Let's check the actual ABI to determine the correct parameters
+    console.log('Factory contract ABI:', factory_contract_abi);
+    
+    if (mode === 'buy') {
+      // For buyTokens, we need to pass the token address and the amount
+      const amountInWei = amount ? parseEther(amount.toString()).toString() : '0';
+      return [{
+        address: factoryAddress,
+        abi: factory_contract_abi,
+        functionName: 'buyTokens',
+        args: [normalizedAddress, amountInWei], // Adding the amount as the second parameter
+        value: amountInWei, // This is the ETH value to send with the transaction
+      }] as unknown as ContractFunctionParameters[];
     } else {
-      handleSell();
+      // For sellTokens, we need to pass the token address and the amount
+      const amountInWei = amount ? parseEther(amount.toString()).toString() : '0';
+      return [{
+        address: factoryAddress,
+        abi: factory_contract_abi,
+        functionName: 'sellTokens',
+        args: [normalizedAddress, amountInWei],
+      }] as unknown as ContractFunctionParameters[];
     }
+  }, [tokenAddress, mode, amount]);
+
+  // Handle transaction success
+  const handleSuccess = (response: TransactionResponse) => {
+    console.log(`${mode === 'buy' ? 'Buy' : 'Sell'} transaction successful:`, response);
+    const parsedAmount = parseFloat(amount);
+    const parsedSlippage = parseFloat(slippage);
     onSubmit(mode, parsedAmount, parsedSlippage);
   };
+
+  // Handle transaction error
+  const handleError = (error: TransactionError) => {
+    console.error(`${mode === 'buy' ? 'Buy' : 'Sell'} transaction error:`, error);
+  };
+
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       {/* Token Info */}
@@ -212,22 +199,36 @@ export default function TradeForm({
       />
 
       {!isConnected ? (
-     
-          <WalletButton/>
-      
+        <WalletButton />
       ) : (
-        <Button
-          variant="contained"
-          color={mode === "buy" ? "secondary" : "error"}
-          fullWidth
-          sx={{ mt: "auto" }}
-          onClick={handleSubmit}
+        <Transaction
+          contracts={contracts}
+          className="w-full"
+          chainId={84532} // Base Sepolia Chain ID
+          onError={handleError}
+          onSuccess={handleSuccess}
         >
-          {mode === "buy" ? "Buy" : "Sell"}
-        </Button>
+          {/* @ts-ignore - The TransactionButton component does accept children */}
+          <TransactionButton 
+            className="w-full py-2 mt-2"
+            style={{
+              backgroundColor: mode === 'buy' ? '#9c27b0' : '#f44336',
+              color: 'white',
+              borderRadius: '4px',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
+            text={mode === "buy" ? "Buy" : "Sell"}
+          >
+            {mode === "buy" ? "Buy" : "Sell"}
+          </TransactionButton>
+          <TransactionStatus>
+            <TransactionStatusLabel />
+            <TransactionStatusAction />
+          </TransactionStatus>
+        </Transaction>
       )}
-
     </Box>
   );
 }
-

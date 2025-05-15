@@ -158,37 +158,37 @@ export default function AgentDetailPage() {
     
           // Request account access if needed
           await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+          // Import the paymaster utilities
+          const { createPaymasterContract, executePaymasterTransaction } = await import('@/utils/paymasterUtils');
+
+          // Create a contract with paymaster support
+          const contract = await createPaymasterContract(
+            process.env.NEXT_PUBLIC_PLATFORMBALANCE_CONTRACT_ADDRESS!,
+            platform_contract_abi
+          );
+
+          const totalCost = (parseInt(donateAmount.toString()) * 0.0001).toString();
+          console.log("buy cost..................", parseEther(totalCost));
+
+          // Execute the transaction with paymaster support
+          const receipt = await executePaymasterTransaction(
+            contract,
+            'buyTokens',
+            [],
+            { value: parseEther(totalCost) }
+          );
+
+          console.log("Transaction mined:", receipt);
+
+          // Get the signer to fetch the user address
           const provider = new BrowserProvider(window.ethereum);
           const signer = await provider.getSigner();
           const userAddress = await signer.getAddress();
-          console.log("Connected user:", userAddress);
-    
-          const network = await provider.getNetwork();
-          console.log("Connected to network:", network);
-    
-          const contract = new Contract(
-            process.env.NEXT_PUBLIC_PLATFORMBALANCE_CONTRACT_ADDRESS!,
-            platform_contract_abi,
-            signer
-          );
-    
-          const totalCost = (parseInt(donateAmount.toString()) * 0.0001).toString();
-          console.log("buy cost..................", parseEther(totalCost));
-    
-          const tx = await contract.buyTokens({
-            value: parseEther(totalCost)
-        });
-    
-     
-          console.log("Transaction sent:", tx.hash);
-    
-          const receipt = await tx.wait();
-          console.log("Transaction mined:", receipt);
 
-          if (userAddress ) {
+          if (userAddress) {
             await fetchTokenBalance(userAddress, setTokenBalance);
           }
-    
     
         } catch (error) {
           console.error('Error during buy transaction:', error);
