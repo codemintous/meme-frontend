@@ -45,6 +45,29 @@ export default function TradeForm({
   const { isConnected } = useAccount();
 
   // Validate inputs
+  // const isValidInput = () => {
+  //   const parsedAmount = parseFloat(amount);
+  //   const parsedSlippage = parseFloat(slippage);
+
+  //   if (isNaN(parsedAmount) || parsedAmount <= 0) {
+  //     alert('Please enter a valid amount');
+  //     return false;
+  //   }
+
+  //   if (isNaN(parsedSlippage) || parsedSlippage < 0 || parsedSlippage > 100) {
+  //     alert('Please enter a valid slippage percentage (0-100)');
+  //     return false;
+  //   }
+
+  //   if (!isValidTokenAddress(tokenAddress)) {
+  //     alert("This token doesn't have a valid contract address. It may not have been launched yet.");
+  //     return false;
+  //   }
+
+  //   return true;
+  // };
+
+  // Validate inputs
   const isValidInput = () => {
     const parsedAmount = parseFloat(amount);
     const parsedSlippage = parseFloat(slippage);
@@ -74,22 +97,83 @@ export default function TradeForm({
     const normalizedAddress = normalizeTokenAddress(tokenAddress);
     const factoryAddress = process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS as Address;
     
-    // Always use a minimal amount for testing
-    const minAmount = BigInt(1);
+    // Parse the display amount for preview
+    const displayAmount = amount || '0';
+    const isValidInput = (input: string): boolean => {
+      const parsed = parseFloat(input);
+      return !isNaN(parsed) && parsed > 0; // Ensure input is valid and positive
+    };
+    
+    // Validate input
+    if (!isValidInput(amount)) {
+      console.error('Invalid input amount:', amount);
+      // Return empty array instead of undefined
+      return [] as unknown as ContractFunctionParameters[];
+    }
+    
+    const parsedAmount = parseFloat(displayAmount);
+    
+    // Calculate ETH amount based on exchange rate: 0.0001 ETH = 1 MATH
+    const ethAmountPerToken = 0.0001; // Fixed exchange rate
+    const ethForTransaction = (parsedAmount * ethAmountPerToken).toFixed(18);
+    
+    // For the actual blockchain transaction
+    const tokenAmount = parseEther(displayAmount); // Full token amount
+    const ethValue = parseEther(ethForTransaction); // ETH based on exchange rate
+    
+    console.log('Display amount (user input):', displayAmount);
+    console.log('Exchange rate: 1 MATH =', ethAmountPerToken, 'ETH');
+    console.log('ETH amount for transaction:', ethForTransaction);
+    console.log('Token amount in wei:', tokenAmount.toString());
+    console.log('ETH value in wei:', ethValue.toString());
     
     if (mode === 'buy') {
+      // BUY: Spend ethForTransaction ETH to buy displayAmount MATH
       return [{
         address: factoryAddress,
         abi: factory_contract_abi,
         functionName: 'buyTokens',
-        args: [normalizedAddress, minAmount], // token address and minimal amount
+        args: [normalizedAddress, tokenAmount], // Full token amount
+        value: ethValue, // ETH value based on exchange rate
+        meta: {
+          assetChanges: [
+            {
+              type: 'increment',
+              symbol: 'MATH',
+              amount: displayAmount // Full token amount
+            },
+            {
+              type: 'decrement',
+              symbol: 'ETH',
+              amount: ethForTransaction // ETH based on exchange rate
+            }
+          ],
+          description: `Buy ${displayAmount} MATH for ${ethForTransaction} ETH`
+        }
       }] as unknown as ContractFunctionParameters[];
     } else {
+      // SELL: Spend displayAmount MATH to receive ethForTransaction ETH
       return [{
         address: factoryAddress,
         abi: factory_contract_abi,
         functionName: 'sellTokens',
-        args: [normalizedAddress, minAmount], // token address and minimal amount
+        args: [normalizedAddress, tokenAmount], // Full token amount
+        value: BigInt(0),
+        meta: {
+          assetChanges: [
+            {
+              type: 'decrement',
+              symbol: 'MATH',
+              amount: displayAmount // Full token amount
+            },
+            {
+              type: 'increment',
+              symbol: 'ETH',
+              amount: ethForTransaction // ETH based on exchange rate
+            }
+          ],
+          description: `Sell ${displayAmount} MATH for ${ethForTransaction} ETH`
+        }
       }] as unknown as ContractFunctionParameters[];
     }
   }, [tokenAddress, mode, amount]);
@@ -172,15 +256,46 @@ export default function TradeForm({
         InputLabelProps={{ sx: { color: "white" } }}
         sx={{ backgroundColor: "#2b2b2b", borderRadius: 1 }}
       />
-      {mode === "buy" ? (
-        <Typography variant="body2" sx={{ color: "white" }}>
-          Gasless transaction - testing mode
+      {/* Transaction Preview Box */}
+      <Box sx={{ 
+        backgroundColor: '#333', 
+        padding: 1, 
+        borderRadius: 1,
+        marginTop: 1,
+        marginBottom: 1
+      }}>
+        <Typography variant="body1" sx={{ color: "white", fontWeight: "bold" }}>
+          Transaction Preview:
         </Typography>
-      ) : (
-        <Typography variant="body2" sx={{ color: "white" }}>
-          Gasless transaction - testing mode
+        {mode === "buy" ? (
+          <Box>
+            <Typography variant="body2" sx={{ color: "#4caf50" }}>
+              +{amount || '0'} {tokenSymbol || 'MATH'}
+            </Typography>
+            <Typography variant="body2" sx={{ color: "#f44336" }}>
+              -{Number(amount || '0') * 0.0001} ETH
+            </Typography>
+            <Typography variant="caption" sx={{ color: "#aaa" }}>
+              Exchange rate: 1 MATH = 0.0001 ETH
+            </Typography>
+          </Box>
+        ) : (
+          <Box>
+            <Typography variant="body2" sx={{ color: "#f44336" }}>
+              -{amount || '0'} {tokenSymbol || 'MATH'}
+            </Typography>
+            <Typography variant="body2" sx={{ color: "#4caf50" }}>
+              +{Number(amount || '0') * 0.0001} ETH
+            </Typography>
+            <Typography variant="caption" sx={{ color: "#aaa" }}>
+              Exchange rate: 1 MATH = 0.0001 ETH
+            </Typography>
+          </Box>
+        )}
+        <Typography variant="caption" sx={{ color: "#aaa" }}>
+          Gasless transaction
         </Typography>
-      )}
+      </Box>
       <TextField
         type="number"
         variant="outlined"
@@ -202,6 +317,7 @@ export default function TradeForm({
           chainId={84532} // Use Base Sepolia Chain ID directly like the template
           onError={handleError}
           onSuccess={handleSuccess}
+          isSponsored={true}
         >
           {/* @ts-ignore - The TransactionButton component does accept children */}
           <TransactionButton 
