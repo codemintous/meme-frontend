@@ -13,7 +13,8 @@ import {
     Menu,
     MenuItem,
     Paper,
-    Stack
+    Stack,
+    CircularProgress
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
@@ -62,7 +63,157 @@ export default function AgentDetailPage() {
     const { isConnected, address } = useAccount();
     const [userImages, setUserImages] = useState<string[]>([]);
     const [communityImages, setCommunityImages] = useState<string[]>([]);
+    const [isSending, setIsSending] = useState(false);
 
+    // Add interface for message type
+    interface ChatMessage {
+        conversationId: string;
+        message: string;
+        response: string;
+        imageUrl?: string;
+        userId: string;
+        timestamp: string;
+    }
+
+    // Add function to extract images from chat history
+    const extractImagesFromChat = (messages: any[]) => {
+        const images = messages
+            .filter(msg => msg.imageUrl)
+            .map(msg => msg.imageUrl);
+        return [...new Set(images)]; // Remove duplicates
+    };
+
+    // Update loadChatHistory to also set community images
+    const loadChatHistory = async () => {
+        if (!jwtToken || !agentId || !address) {
+            console.log('Missing required data for chat history:', { jwtToken: !!jwtToken, agentId, address });
+            return;
+        }
+
+        try {
+            console.log('Loading chat history for:', { agentId, address });
+            const response = await axios.get(
+                `${process.env.NEXT_PUBLIC_BASE_URL}/api/history/combined-chat`,
+                {
+                    params: {
+                        agentId: agentId,
+                        userAddress: address
+                    },
+                    headers: {
+                        'Authorization': `Bearer ${jwtToken}`
+                    }
+                }
+            );
+            
+            console.log('Raw chat history response:', response.data);
+            
+            if (response.data && Array.isArray(response.data.messages)) {
+                // Sort messages by timestamp in ascending order
+                const sortedMessages = [...response.data.messages].sort((a, b) => 
+                    new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+                );
+
+                // Extract and set community images
+                const images = extractImagesFromChat(sortedMessages);
+                setCommunityImages(images);
+
+                // Transform the chat history into our message format with proper typing
+                const formattedMessages = sortedMessages.flatMap((chat: any) => {
+                    console.log('Processing chat message:', chat);
+                    
+                    // Create messages for both user message and bot response
+                    const messages = [];
+                    
+                    // Add user message
+                    if (chat.message) {
+                        messages.push({
+                            text: chat.message,
+                            sender: 'user' as const
+                        });
+                    }
+                    
+                    // Add bot response
+                    if (chat.response) {
+                        messages.push({
+                            text: chat.response,
+                            sender: 'bot' as const
+                        });
+                    }
+
+                    // Add image if present
+                    if (chat.imageUrl) {
+                        messages.push({
+                            text: chat.imageUrl,
+                            sender: 'image' as const
+                        });
+                    }
+                    
+                    return messages;
+                });
+                
+                console.log('Final formatted messages:', formattedMessages);
+                setMessages(formattedMessages);
+
+                // Scroll to bottom after messages are loaded
+                setTimeout(() => {
+                    const chatContainer = document.querySelector('.chat-container');
+                    if (chatContainer) {
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    }
+                }, 100);
+            } else {
+                console.error('Invalid chat history response format:', response.data);
+            }
+        } catch (error: any) {
+            console.error('Error loading chat history:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status
+            });
+        }
+    };
+
+    // Load chat history when component mounts and when jwtToken, agentId, or address changes
+    useEffect(() => {
+        console.log('Effect triggered - jwtToken:', !!jwtToken, 'agentId:', agentId, 'address:', address);
+        if (jwtToken && agentId && address) {
+            loadChatHistory();
+        }
+    }, [jwtToken, agentId, address]);
+
+    // Add a separate effect to handle initial load
+    useEffect(() => {
+        const initializeChat = async () => {
+            if (jwtToken && agentId && address) {
+                await loadChatHistory();
+            }
+        };
+        initializeChat();
+    }, []);
+
+    // Modify saveChatMessage to reload chat history after saving
+    const saveChatMessage = async (message: string, isImage: boolean = false) => {
+        try {
+            await axios.post(
+                `${process.env.NEXT_PUBLIC_BASE_URL}/api/agent/chat`,
+                {
+                    agentId: agentId,
+                    message: message,
+                    isImage: isImage
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${jwtToken}`
+                    }
+                }
+            );
+            // Reload chat history after saving
+            await loadChatHistory();
+        } catch (error) {
+            console.error('Error saving chat message:', error);
+        }
+    };
 
     useEffect(() => {
         const fetchMemes = async () => {
@@ -118,39 +269,43 @@ export default function AgentDetailPage() {
         }
     }, [isConnected, address]);
 
+    // Update the useEffect for fetching user images
     useEffect(() => {
         const fetchUserImages = async () => {
-            if (tab === 1 && address) { // Only fetch when "By Me" tab is selected and wallet is connected
+            if (tab === 1 && address && agentId) { // Only fetch when "By Me" tab is selected and wallet is connected
                 try {
+                    console.log('Fetching user images for:', { address, agentId });
                     const response = await axios.get(
-                        `${process.env.NEXT_PUBLIC_BASE_URL}/api/history/user/${address}/images`
+                        `${process.env.NEXT_PUBLIC_BASE_URL}/api/history/filtered-images`,
+                        {
+                            params: {
+                                agentId: agentId,
+                                userAddress: address
+                            }
+                        }
                     );
-                    setUserImages(response.data);
-                } catch (error) {
-                    console.error("Error fetching user images:", error);
+
+                    console.log('Filtered images response:', response.data);
+                    
+                    if (response.data && Array.isArray(response.data)) {
+                        setUserImages(response.data);
+                    } else {
+                        console.error('Invalid response format:', response.data);
+                        setUserImages([]);
+                    }
+                } catch (error: any) {
+                    console.error("Error fetching user images:", {
+                        message: error.message,
+                        status: error.response?.status,
+                        data: error.response?.data
+                    });
+                    setUserImages([]);
                 }
             }
         };
 
         fetchUserImages();
-    }, [tab, address]);
-
-    useEffect(() => {
-        const fetchCommunityImages = async () => {
-            if (tab === 0 && agentId) { // Only fetch when "Community" tab is selected
-                try {
-                    const response = await axios.get(
-                        `${process.env.NEXT_PUBLIC_BASE_URL}/api/history/agent/${agentId}/all-images`
-                    );
-                    setCommunityImages(response.data);
-                } catch (error) {
-                    console.error("Error fetching community images:", error);
-                }
-            }
-        };
-
-        fetchCommunityImages();
-    }, [tab, agentId]);
+    }, [tab, address, agentId]);
 
     const handleDonate = async () => {
         try {
@@ -218,9 +373,41 @@ export default function AgentDetailPage() {
         setAnchorEl(null);
     };
     const handleSend = async () => {
-        if (inputValue.trim()) {
+        if (inputValue.trim() && !isSending) {
+            setIsSending(true);
             const userMessage = { text: inputValue, sender: 'user' as const };
             const loadingMessage = { text: '', sender: 'loading' as const };
+
+            // Save user message immediately
+            try {
+                console.log('Saving user message:', {
+                    agentId,
+                    message: inputValue
+                });
+                
+                const saveResponse = await axios.post(
+                    `${process.env.NEXT_PUBLIC_BASE_URL}/api/agents/chat`,
+                    {
+                        agentId: agentId,
+                        message: inputValue
+                    },
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${jwtToken}`
+                        }
+                    }
+                );
+                console.log('User message save response:', saveResponse.data);
+            } catch (error: any) {
+                console.error('Error saving user message:', {
+                    message: error.message,
+                    response: error.response?.data,
+                    status: error.response?.status
+                });
+                setIsSending(false);
+                return;
+            }
 
             setMessages([...messages, userMessage, loadingMessage]);
             setInputValue('');
@@ -228,12 +415,12 @@ export default function AgentDetailPage() {
             setTimeout(async () => {
                 if (selectedMode === 'Meme') {
                     try {
-                        // Call the image generation API with correct endpoint
+                        console.log('Generating image with prompt:', inputValue);
                         const response = await axios.post(
-                            `${process.env.NEXT_PUBLIC_BASE_URL}/api/images/generate`,
+                            `${process.env.NEXT_PUBLIC_BASE_URL}/api/agents/generate-image`,
                             {
-                                prompt: inputValue,
-                                agentId: agentId
+                                agentId: agentId,
+                                prompt: inputValue
                             },
                             {
                                 headers: {
@@ -243,30 +430,64 @@ export default function AgentDetailPage() {
                             }
                         );
 
-                        // Get the generated image URL from the response
+                        console.log("Image generation response:", response.data);
+
                         const generatedImageUrl = response.data.imageUrl;
+                        
+                        if (!generatedImageUrl) {
+                            throw new Error('No image URL received in response');
+                        }
 
-                        // Convert the image URL to a blob and upload to Pinata
-                        const imageResponse = await fetch(generatedImageUrl);
-                        const blob = await imageResponse.blob();
-                        const file = new File([blob], 'generated-meme.png', { type: blob.type });
+                        // Save image URL immediately
+                        try {
+                            console.log('Saving image message:', {
+                                agentId,
+                                message: inputValue,
+                                imageUrl: generatedImageUrl
+                            });
+                            
+                            const imageSaveResponse = await axios.post(
+                                `${process.env.NEXT_PUBLIC_BASE_URL}/api/agents/chat`,
+                                {
+                                    agentId: agentId,
+                                    message: inputValue,
+                                    imageUrl: generatedImageUrl
+                                },
+                                {
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${jwtToken}`
+                                    }
+                                }
+                            );
+                            console.log('Image message save response:', imageSaveResponse.data);
+                        } catch (error: any) {
+                            console.error('Error saving image message:', {
+                                message: error.message,
+                                response: error.response?.data,
+                                status: error.response?.status
+                            });
+                        }
 
-                        const ipfsHash = await uploadToPinata(file);
-                        const ipfsUrl = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`;
-
-                        setMessages((prev) => [
-                            ...prev.slice(0, -1), // Remove loading message
-                            { text: ipfsUrl, sender: 'image' as const },
-                        ]);
-                    } catch (error) {
-                        console.error('Error uploading meme to Pinata:', error);
                         setMessages((prev) => [
                             ...prev.slice(0, -1),
-                            { text: 'Failed to generate meme.', sender: 'bot' as const },
+                            { text: generatedImageUrl, sender: 'image' as const },
+                        ]);
+
+                    } catch (error: any) {
+                        console.error('Error in image generation process:', {
+                            message: error.message,
+                            response: error.response?.data,
+                            status: error.response?.status
+                        });
+                        setMessages((prev) => [
+                            ...prev.slice(0, -1),
+                            { text: `Failed to generate meme: ${error?.message || 'Unknown error'}`, sender: 'bot' as const },
                         ]);
                     }
                 } else {
                     try {
+                        console.log('Sending chat message to agent:', inputValue);
                         const response = await axios.post(
                             `${process.env.NEXT_PUBLIC_BASE_URL}/api/agents/chat`,
                             {
@@ -277,28 +498,70 @@ export default function AgentDetailPage() {
                                 headers: {
                                     'Content-Type': 'application/json',
                                     'Accept': 'application/json',
-                                    'Authorization': `Bearer ${jwtToken}` // Uncomment when auth is implemented
+                                    'Authorization': `Bearer ${jwtToken}`
                                 }
                             }
                         );
+
+                        console.log('Agent chat response:', response.data);
+
+                        // Save bot response immediately
+                        try {
+                            console.log('Saving bot response:', {
+                                agentId,
+                                message: response.data.response
+                            });
+                            
+                            const botSaveResponse = await axios.post(
+                                `${process.env.NEXT_PUBLIC_BASE_URL}/api/agents/chat`,
+                                {
+                                    agentId: agentId,
+                                    message: response.data.response
+                                },
+                                {
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${jwtToken}`
+                                    }
+                                }
+                            );
+                            console.log('Bot response save response:', botSaveResponse.data);
+                        } catch (error: any) {
+                            console.error('Error saving bot response:', {
+                                message: error.message,
+                                response: error.response?.data,
+                                status: error.response?.status
+                            });
+                        }
 
                         setMessages((prev) => [
                             ...prev.slice(0, -1),
                             { text: response.data.response, sender: 'bot' as const },
                         ]);
-                    } catch (error) {
-                        console.error('Error sending message:', error);
+                    } catch (error: any) {
+                        console.error('Error sending message:', {
+                            message: error.message,
+                            response: error.response?.data,
+                            status: error.response?.status
+                        });
                         setMessages((prev) => [
                             ...prev.slice(0, -1),
                             { text: 'Sorry, there was an error processing your message.', sender: 'bot' as const },
                         ]);
                     }
                 }
+                setIsSending(false);
             }, 800);
         }
     };
 
-
+    // Add useEffect to scroll to bottom when messages change
+    useEffect(() => {
+        const chatContainer = document.querySelector('.chat-container');
+        if (chatContainer) {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    }, [messages]);
 
     return (
         <Box display="flex" flexDirection="row" height="100vh">
@@ -379,7 +642,27 @@ export default function AgentDetailPage() {
 
 
                 {/* Chat Area */}
-                <Box flexGrow={1} overflow="auto" px={1}>
+                <Box 
+                    className="chat-container"
+                    flexGrow={1} 
+                    overflow="auto" 
+                    px={1}
+                    sx={{
+                        '&::-webkit-scrollbar': {
+                            width: '8px',
+                        },
+                        '&::-webkit-scrollbar-track': {
+                            background: '#1a1a1a',
+                        },
+                        '&::-webkit-scrollbar-thumb': {
+                            background: '#333',
+                            borderRadius: '4px',
+                        },
+                        '&::-webkit-scrollbar-thumb:hover': {
+                            background: '#444',
+                        },
+                    }}
+                >
                     {messages.map((msg, i) => (
                         <Box
                             key={i}
@@ -420,16 +703,21 @@ export default function AgentDetailPage() {
                                 ) : msg.sender === 'image' ? (
                                     <>
                                         <Box display="flex" alignItems="center" mb={1}>
-                                            <Avatar src="/agents/meme1.png" alt="Agent Name" sx={{ width: 30, height: 30, mr: 1 }} />
-                                            <Typography variant="body2" color="white">BigBrainPepe</Typography>
+                                            <Avatar src={memeDetail?.profileImageUrl} alt={memeDetail?.name || "Agent"} sx={{ width: 30, height: 30, mr: 1 }} />
+                                            <Typography variant="body2" color="white">{memeDetail?.name || "Agent"}</Typography>
                                         </Box>
                                         <img src={msg.text} alt="Generated Meme" style={{ maxWidth: '100%', borderRadius: '4px' }} />
                                         <Box display="flex" justifyContent="flex-end" mt={1}>
-                                            <IconButton sx={{ color: 'white' }} onClick={() => {/* Handle video action */ }}>
-                                                <VideoIcon /> {/* Replace with actual video icon */}
+                                            <IconButton 
+                                                sx={{ color: 'white' }} 
+                                                onClick={() => {
+                                                    alert('Video feature coming soon!');
+                                                }}
+                                            >
+                                                <VideoIcon />
                                             </IconButton>
-                                            <IconButton sx={{ color: 'white' }} onClick={() => {/* Handle regenerate action */ }}>
-                                                <RefreshIcon /> {/* Replace with actual regenerate icon */}
+                                            <IconButton sx={{ color: 'white' }} onClick={() => {/* Handle regenerate action */}}>
+                                                <RefreshIcon />
                                             </IconButton>
                                         </Box>
                                     </>
@@ -538,10 +826,19 @@ export default function AgentDetailPage() {
                                 borderRadius: '8px',
                                 width: 48,
                                 height: 48,
+                                '&:disabled': {
+                                    bgcolor: '#4a1d6d',
+                                    color: '#9ca3af'
+                                }
                             }}
                             onClick={handleSend}
+                            disabled={isSending || !inputValue.trim()}
                         >
-                            <SendIcon />
+                            {isSending ? (
+                                <CircularProgress size={24} color="inherit" />
+                            ) : (
+                                <SendIcon />
+                            )}
                         </IconButton>
                     </Box>
                 </Box>
@@ -563,12 +860,22 @@ export default function AgentDetailPage() {
                         maxHeight: 350,
                         overflowY: 'auto',
                         '&::-webkit-scrollbar': {
-                            display: 'none',
+                            width: '8px',
+                        },
+                        '&::-webkit-scrollbar-track': {
+                            background: '#1a1a1a',
+                        },
+                        '&::-webkit-scrollbar-thumb': {
+                            background: '#333',
+                            borderRadius: '4px',
+                        },
+                        '&::-webkit-scrollbar-thumb:hover': {
+                            background: '#444',
                         },
                     }}
                 >
                     {tab === 0 ? (
-                        // Community tab - show agent's community images
+                        // Community tab - show all agent's images from chat history
                         communityImages.length > 0 ? (
                             communityImages.map((imageUrl, i) => (
                                 <Box
@@ -578,22 +885,32 @@ export default function AgentDetailPage() {
                                     borderRadius={2}
                                     overflow="hidden"
                                     position="relative"
+                                    sx={{
+                                        cursor: 'pointer',
+                                        '&:hover': {
+                                            transform: 'scale(1.05)',
+                                            transition: 'transform 0.2s ease-in-out'
+                                        }
+                                    }}
                                 >
-                                    <Image
+                                    <img
                                         src={imageUrl}
                                         alt={`community-meme-${i}`}
-                                        layout="fill"
-                                        objectFit="cover"
+                                        style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            objectFit: 'cover'
+                                        }}
                                     />
                                 </Box>
                             ))
                         ) : (
                             <Typography color="gray" sx={{ width: '100%', textAlign: 'center', mt: 2 }}>
-                                No community images found
+                                No images found
                             </Typography>
                         )
                     ) : (
-                        // By Me tab - show user's images
+                        // By Me tab - show user's images for this agent
                         userImages.length > 0 ? (
                             userImages.map((imageUrl, i) => (
                                 <Box
@@ -603,12 +920,22 @@ export default function AgentDetailPage() {
                                     borderRadius={2}
                                     overflow="hidden"
                                     position="relative"
+                                    sx={{
+                                        cursor: 'pointer',
+                                        '&:hover': {
+                                            transform: 'scale(1.05)',
+                                            transition: 'transform 0.2s ease-in-out'
+                                        }
+                                    }}
                                 >
-                                    <Image
+                                    <img
                                         src={imageUrl}
                                         alt={`user-meme-${i}`}
-                                        layout="fill"
-                                        objectFit="cover"
+                                        style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            objectFit: 'cover'
+                                        }}
                                     />
                                 </Box>
                             ))
@@ -635,7 +962,7 @@ export default function AgentDetailPage() {
                 </Button>
 
                 {/* Comments */}
-                <Typography variant="subtitle2" color="gray" gutterBottom>
+                {/* <Typography variant="subtitle2" color="gray" gutterBottom>
                     Latest Comments
                 </Typography>
                 <Box
@@ -660,7 +987,7 @@ export default function AgentDetailPage() {
                             </Box>
                         </Box>
                     ))}
-                </Box>
+                </Box> */}
             </Box>
 
             <Dialog

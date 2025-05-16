@@ -260,12 +260,12 @@ useEffect(() => {
               <Typography>Rankings</Typography>
             </StyledLink>
           </NavItem>
-          <NavItem disablePadding>
+          {/* <NavItem disablePadding>
             <StyledLink href="/trending">
               <TrendingUp size={20} />
               <Typography>Trending</Typography>
             </StyledLink>
-          </NavItem>
+          </NavItem> */}
           <NavItem disablePadding>
             <StyledLink href="/about">
               <Info size={20} />
@@ -296,6 +296,7 @@ useEffect(() => {
          
 {Number(tokenBalance ?? 0).toFixed(2)} 
 </Button>
+<Link href={"/creatememe"}>
 
         <Button
           variant="contained"
@@ -303,11 +304,10 @@ useEffect(() => {
           startIcon={<Plus size={20} />}
           sx={{ backgroundColor: '#9333ea', '&:hover': { backgroundColor: '#7e22ce' } }}
         >
-          <Link href={"/creatememe"}>
             Create Meme
-          </Link>
 
         </Button>
+        </Link>
 
         <WalletButton />
       </Box>

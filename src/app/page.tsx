@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   Container,
+  Link,
   TextField,
   Typography,
 } from "@mui/material";
@@ -81,9 +82,11 @@ export default function Home() {
         <Typography variant="body1" mb={3}>
           No ideas? No problem, let us handle this for you!
         </Typography>
+        <Link href={"/creatememe"}>
         <Button variant="contained" color="secondary" size="large">
           Spawn a random meme now!
         </Button>
+        </Link>
       </Box>
 
       <HorizontalScrollSection id="agents-container" title="Trending Agents" icon={<TrendingUp />}>
@@ -106,7 +109,7 @@ export default function Home() {
 
       {/* Discover Agents */}
 
-      <HorizontalScrollSection
+      {/* <HorizontalScrollSection
         id="discover-container"
         title="Discover Agents"
         icon={<TrendingUp />}
@@ -143,8 +146,8 @@ export default function Home() {
         {trendingAgents.map((agent) => (
           <DiscoverAgentCard key={agent.id} agent={agent} />
         ))}
-      </HorizontalScrollSection>
-      <LatestMemes memes={latestMemes} />
+      </HorizontalScrollSection> */}
+      {/* <LatestMemes memes={latestMemes} /> */}
     </Container>
     </Providers>
   );

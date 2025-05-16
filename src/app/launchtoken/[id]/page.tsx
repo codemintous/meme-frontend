@@ -375,11 +375,11 @@ export default function LaunchTokenPage() {
 
       <Divider sx={{ borderColor: "gray", mb: 2 }} />
       <Typography variant="subtitle2" sx={{ mb: 1 }}>
-        Supply
+        Total Supply
       </Typography>
-      <Typography variant="caption" sx={{ color: "gray", mb: 1, display: "block" }}>
+      {/* <Typography variant="caption" sx={{ color: "gray", mb: 1, display: "block" }}>
         Optional: Be the very first person to buy your token!
-      </Typography>
+      </Typography> */}
       <TextField
         fullWidth
         type="number"
