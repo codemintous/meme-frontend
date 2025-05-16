@@ -12,18 +12,18 @@ const queryClient = new QueryClient();
 
 function Providers(props: { children: ReactNode }) {
   return (
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        <OnchainKitProvider
-          apiKey={process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY}
-          chain={baseSepolia}
-        >
+    <OnchainKitProvider 
+      apiKey={process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY}
+      chain={baseSepolia}
+    >
+      <WagmiProvider config={config}>
+        <QueryClientProvider client={queryClient}>
           <RainbowKitProvider>
             {props.children}
           </RainbowKitProvider>
-        </OnchainKitProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+        </QueryClientProvider>
+      </WagmiProvider>
+    </OnchainKitProvider>
   );
 }
 

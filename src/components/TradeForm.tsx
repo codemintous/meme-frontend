@@ -74,24 +74,22 @@ export default function TradeForm({
     const normalizedAddress = normalizeTokenAddress(tokenAddress);
     const factoryAddress = process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS as Address;
     
-    // Convert amount to a very small value for testing
-    const minAmount = BigInt(1000); // 1000 wei
-    console.log('Using amount:', minAmount.toString(), 'wei');
+    // Always use a minimal amount for testing
+    const minAmount = BigInt(1);
     
     if (mode === 'buy') {
       return [{
         address: factoryAddress,
         abi: factory_contract_abi,
         functionName: 'buyTokens',
-        args: [normalizedAddress, minAmount], // token address and amount in wei
-        value: minAmount, // match the amount since it's payable
+        args: [normalizedAddress, minAmount], // token address and minimal amount
       }] as unknown as ContractFunctionParameters[];
     } else {
       return [{
         address: factoryAddress,
         abi: factory_contract_abi,
         functionName: 'sellTokens',
-        args: [normalizedAddress, minAmount], // token address and amount in wei
+        args: [normalizedAddress, minAmount], // token address and minimal amount
       }] as unknown as ContractFunctionParameters[];
     }
   }, [tokenAddress, mode, amount]);
@@ -176,11 +174,11 @@ export default function TradeForm({
       />
       {mode === "buy" ? (
         <Typography variant="body2" sx={{ color: "white" }}>
-          Gasless transaction - no ETH needed
+          Gasless transaction - testing mode
         </Typography>
       ) : (
         <Typography variant="body2" sx={{ color: "white" }}>
-          Gasless transaction - no ETH needed
+          Gasless transaction - testing mode
         </Typography>
       )}
       <TextField
@@ -201,7 +199,7 @@ export default function TradeForm({
         <Transaction
           contracts={contracts}
           className="w-full"
-          chainId={84532} // Base Sepolia Chain ID
+          chainId={84532} // Use Base Sepolia Chain ID directly like the template
           onError={handleError}
           onSuccess={handleSuccess}
         >
