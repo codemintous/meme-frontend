@@ -228,10 +228,28 @@ export default function AgentDetailPage() {
             setTimeout(async () => {
                 if (selectedMode === 'Meme') {
                     try {
-                        // Fetch image from public folder
-                        const response = await fetch('/agents/meme1.png');
-                        const blob = await response.blob();
-                        const file = new File([blob], 'meme1.png', { type: blob.type });
+                        // Call the image generation API with correct endpoint
+                        const response = await axios.post(
+                            `${process.env.NEXT_PUBLIC_BASE_URL}/api/images/generate`,
+                            {
+                                prompt: inputValue,
+                                agentId: agentId
+                            },
+                            {
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${jwtToken}`
+                                }
+                            }
+                        );
+
+                        // Get the generated image URL from the response
+                        const generatedImageUrl = response.data.imageUrl;
+
+                        // Convert the image URL to a blob and upload to Pinata
+                        const imageResponse = await fetch(generatedImageUrl);
+                        const blob = await imageResponse.blob();
+                        const file = new File([blob], 'generated-meme.png', { type: blob.type });
 
                         const ipfsHash = await uploadToPinata(file);
                         const ipfsUrl = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`;
