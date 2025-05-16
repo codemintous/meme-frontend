@@ -114,31 +114,32 @@ export default function LaunchTokenPage() {
 
   const handleLaunchToken = async () => {
     try {
-      const provider = new BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const userAddress = await signer.getAddress();
-      console.log("Connected user:", userAddress);
+      // Request account access if needed
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
 
-      const network = await provider.getNetwork();
-      console.log("Connected to network:", network);
+      // Import the paymaster utilities
+      const { createPaymasterContract, executePaymasterTransaction } = await import('@/utils/paymasterUtils');
 
-      const contract = new Contract(
+      // Create a contract with paymaster support
+      const contract = await createPaymasterContract(
         process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS!,
-        factory_contract_abi,
-        signer
+        factory_contract_abi
       );
 
       console.log("Factory address:", process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS);
 
-      const tx = await contract.launchToken(
-        tokenName,
-        tokenSymbol,
-        parseUnits(supply, 18),
-        parseUnits("1", 14)
+      // Execute the transaction with paymaster support
+      const receipt = await executePaymasterTransaction(
+        contract,
+        'launchToken',
+        [
+          tokenName,
+          tokenSymbol,
+          parseUnits(supply, 18),
+          parseUnits("1", 14)
+        ]
       );
 
-      console.log("Transaction sent:", tx.hash);
-      const receipt = await tx.wait();
       console.log("Transaction mined:", receipt);
 
       const iface = new Interface(factory_contract_abi);
