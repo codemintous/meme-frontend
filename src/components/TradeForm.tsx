@@ -275,9 +275,9 @@ export default function TradeForm({
             <Typography variant="body2" sx={{ color: "#f44336" }}>
               -{Number(amount || '0') * 0.0001} ETH
             </Typography>
-            <Typography variant="caption" sx={{ color: "#aaa" }}>
+            {/* <Typography variant="caption" sx={{ color: "#aaa" }}>
               Exchange rate: 1 MATH = 0.0001 ETH
-            </Typography>
+            </Typography> */}
           </Box>
         ) : (
           <Box>
@@ -293,7 +293,7 @@ export default function TradeForm({
           </Box>
         )}
         <Typography variant="caption" sx={{ color: "#aaa" }}>
-          Gasless transaction
+          Gasless transaction | Sponsored by Coinbase
         </Typography>
       </Box>
       <TextField
