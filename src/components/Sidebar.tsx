@@ -223,10 +223,15 @@ useEffect(() => {
     <SidebarContainer>
       {/* Logo Section */}
       <LogoContainer>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <LogoCircle />
-          <Typography variant="h6" fontWeight="bold">MemeMinto AI</Typography>
-        </Box>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <Box
+      component="img"
+      src="/agents/memelogo.png" // replace with your actual image path
+      alt="Logo"
+      sx={{ width: 42, height: 42, borderRadius: '50%' }}
+    />
+    <Typography variant="h6" fontWeight="bold">MemeMinto AI</Typography>
+  </Box>
         <IconButton color="inherit" size="small">
           <ChevronLeft />
         </IconButton>
