@@ -221,7 +221,6 @@ useEffect(() => {
 
   return (
     <SidebarContainer>
-      {/* Logo Section */}
       <LogoContainer>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
     <Box
