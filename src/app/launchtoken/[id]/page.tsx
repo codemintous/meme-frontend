@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
   Box,
   Button,
@@ -128,172 +128,75 @@ export default function LaunchTokenPage() {
     }
   };
 
-  // const handleLaunchToken = async () => {
-  //   try {
-  //     const factoryAddress = process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS as Address;
-      
-  //     // Log the parameters for debugging
-  //     console.log("Launch Token Parameters:", {
-  //       factoryAddress,
-  //       tokenName,
-  //       tokenSymbol,
-  //       supply: parseUnits(supply, 18).toString(),
-  //       price: parseUnits("1", 14).toString()
-  //     });
-
-  //     // Validate parameters
-  //     if (!tokenName || !tokenSymbol || !supply) {
-  //       console.error("Missing required parameters");
-  //       return [];
-  //     }
-
-  //     const contracts: ContractFunctionParameters[] = [{
-  //       address: factoryAddress,
-  //       abi: factory_contract_abi,
-  //       functionName: 'launchToken',
-  //       args: [
-  //         tokenName,
-  //         tokenSymbol,
-  //         parseUnits(supply, 18),
-  //         parseUnits("1", 14)
-  //       ],
-  //       meta: {
-  //         description: `Launch ${tokenName} (${tokenSymbol}) token`
-  //       }
-  //     }];
-
-  //     console.log("Contract parameters:", contracts);
-  //     return contracts;
-  //   } catch (error) {
-  //     console.error("❌ Launch token failed:", error);
-  //     return [];
-  //   }
-  // };
-
-
-  const handleLaunchToken = async () => {
-    try {
-      const provider = new BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-  
-      const network = await provider.getNetwork();
-      console.log("Connected to network:", network);
-  
-      const contract = new Contract(
-        process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS!,
-        factory_contract_abi,
-        signer
-      );
-  
-      const tx = await contract.launchToken(
-        tokenName,           // Replace with actual value
-      tokenSymbol,          // Replace with actual value
-      parseUnits(supply, 18),
-      parseUnits("1", 14)
-      );
-  
-      console.log("Transaction sent:", tx.hash);
-  
-      const receipt = await tx.wait();
-      console.log("Transaction mined:", receipt);
-
-      const iface = new Interface(factory_contract_abi);
-      let tokenAddress: string | null = null;
-  
-      for (const log of receipt.logs) {
-        try {
-          const parsed = iface.parseLog(log) as LogDescription;
-      
-          if (parsed.name === "TokenLaunched") {
-            console.log("📦 Full TokenLaunched Event Object:", parsed); // Full parsed event
-            console.log("📌 Event Args:", parsed.args); // Only event arguments
-      
-            tokenAddress = parsed.args.token;
-            console.log("🚀 Token launched!", tokenAddress);
-            break;
-          }
-        } catch (err) {
-          // If log doesn't match the ABI event signature
-          console.log("Skipping log:", err);
-        }
+  // Use useMemo to compute contract parameters only when relevant values change
+  const contractParams = useMemo(() => {
+    if (!tokenName || !tokenSymbol || !supply) return [];
+    const factoryAddress = process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS as Address;
+    return [{
+      address: factoryAddress,
+      abi: factory_contract_abi,
+      functionName: 'launchToken',
+      args: [
+        tokenName,
+        tokenSymbol,
+        parseUnits(supply, 18),
+        parseUnits("1", 14)
+      ],
+      meta: {
+        description: `Launch ${tokenName} (${tokenSymbol}) token`
       }
-      if (tokenAddress) {
-        console.log("✅ Token Address found:", tokenAddress);
-        await updateTokenDetails(tokenAddress);
-      } else {
-        console.warn("⚠️ No TokenLaunched event found — skipping API update");
-      }
-  
-  
-      // const event = receipt.logs.find((log: any) => log.fragment?.name === "TokenLaunched");
-  
-      // if (event) {
-      //   console.log("🚀 Token launched!", event);
-      //   console.log("Token Address:", event.args.token);
-      // } else {
-      //   console.error("❌ TokenLaunched event not found");
-      // }
-    } catch (error) {
-      console.error("Launch token failed:", error);
-    }
-  };
+    }];
+  }, [tokenName, tokenSymbol, supply]);
 
   const handleSuccess = async (response: TransactionResponse) => {
-    console.log("Full transaction response:", JSON.stringify(response, null, 2));
-    console.log("Response type:", typeof response);
-    console.log("Response keys:", Object.keys(response));
-    console.log("Response prototype:", Object.getPrototypeOf(response));
-    console.log("Response toString:", response.toString());
-    
-    try {
-      // Create a public client to fetch transaction receipt
-      const publicClient = createPublicClient({
-        chain: baseSepolia,
-        transport: http()
-      });
+    // Safely log the response
+    console.log(
+      "Full transaction response:",
+      JSON.stringify(response, (key, value) =>
+        typeof value === "bigint" ? value.toString() : value,
+        2
+      )
+    );
 
-      // Log the response for inspection
-      console.log('Transaction response: ==============>>>>>>>>', response);
-      // Get transaction receipt using the transaction hash
-      const receipt = await publicClient.getTransactionReceipt({
-        hash: response.hash as `0x${string}`
-      });
+    // Find the correct hash property
+    const txHash = response.hash || response.transactionHash || response.txHash || response.tx;
+    if (!txHash) {
+      console.error("No transaction hash found in response", response);
+      return;
+    }
 
-      if (!receipt) {
-        console.error("No transaction receipt found");
-        return;
-      }
+    // Fetch the receipt
+    const publicClient = createPublicClient({
+      chain: baseSepolia,
+      transport: http()
+    });
+    const receipt = await publicClient.getTransactionReceipt({
+      hash: txHash as `0x${string}`
+    });
 
-      const iface = new Interface(factory_contract_abi);
-      let tokenAddress: string | null = null;
-
-      // Parse logs from the receipt
-      for (const log of receipt.logs) {
-        try {
-          const parsed = iface.parseLog({
-            topics: log.topics as string[],
-            data: log.data
-          }) as LogDescription;
-          
-          if (parsed.name === "TokenLaunched") {
-            tokenAddress = parsed.args.token;
-            console.log("🚀 Token launched!", tokenAddress);
-            break;
-          }
-        } catch (err) {
-          // log did not match ABI, skip
-          console.log(err);
+    // Parse logs for TokenLaunched event
+    const iface = new Interface(factory_contract_abi);
+    let tokenAddress: string | null = null;
+    for (const log of receipt.logs) {
+      try {
+        const parsed = iface.parseLog({
+          topics: log.topics as string[],
+          data: log.data
+        }) as LogDescription;
+        if (parsed.name === "TokenLaunched") {
+          tokenAddress = parsed.args.token;
+          break;
         }
+      } catch (err) {
+        // Not the right log, skip
       }
+    }
 
-      if (tokenAddress) {
-        console.log("✅ Token Address found:", tokenAddress);
-        await updateTokenDetails(tokenAddress);
-      } else {
-        console.warn("⚠️ No TokenLaunched event found — skipping API update");
-      }
-    } catch (error) {
-      console.error("Error processing transaction:", error);
+    // Save to DB if found
+    if (tokenAddress) {
+      await updateTokenDetails(tokenAddress);
+    } else {
+      console.warn("⚠️ No TokenLaunched event found — skipping API update");
     }
   };
 
@@ -520,7 +423,7 @@ export default function LaunchTokenPage() {
      
 
       <Transaction
-        contracts={handleLaunchToken()}
+        contracts={contractParams}
         className="w-full"
         chainId={84532}
         onError={handleError}
@@ -529,14 +432,6 @@ export default function LaunchTokenPage() {
       >
         <TransactionButton 
           className="w-full py-2 mt-2"
-          style={{
-            backgroundColor: '#9c27b0',
-            color: 'white',
-            borderRadius: '4px',
-            border: 'none',
-            cursor: 'pointer',
-            fontWeight: 'bold'
-          }}
           text="Launch Token"
         />
         <TransactionStatus>
