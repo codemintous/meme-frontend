@@ -574,6 +574,10 @@ export default function AgentDetailPage() {
                         <Box>
                             <Typography variant="h6" color="white">{memeDetail?.name}</Typography>
                             <Typography variant="body2" color="gray">{memeDetail?.description}</Typography>
+                            <Link href={`https://sepolia.basescan.org/address/${memeDetail?.tokenDetails?.tokenAddress}`} target="_blank" rel="noopener noreferrer">
+                                <Typography variant="body2" color="gray">{memeDetail?.tokenDetails?.tokenAddress}</Typography>
+                            </Link>
+
                         </Box>
                     </Box>
                     <Box display="flex" flexDirection="column" alignItems="end" gap={2}>
@@ -1021,7 +1025,7 @@ export default function AgentDetailPage() {
                 </DialogActions>
             </Dialog>
 
-            <AgentPopup open={popupOpen} handleClose={() => setPopupOpen(false)} />
+            <AgentPopup open={popupOpen} handleClose={() => setPopupOpen(false)} agent={memeDetail} />
             <Dialog
                 open={isShowWalletModal}
                 onClose={() => setIsShowWalletModal(false)}

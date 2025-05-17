@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Box,
   Button,
@@ -18,6 +18,20 @@ import factory_contract_abi from "@/data/factory_contract_abi.json"
 import { BrowserProvider, Contract, Interface, LogDescription, parseUnits } from "ethers";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import {
+  Transaction,
+  TransactionButton,
+  TransactionStatus,
+  TransactionStatusAction,
+  TransactionStatusLabel,
+} from '@coinbase/onchainkit/transaction';
+import type {
+  TransactionError,
+  TransactionResponse,
+} from '@coinbase/onchainkit/transaction';
+import type { ContractFunctionParameters, Address } from 'viem';
+import { createPublicClient, http } from 'viem';
+import { baseSepolia } from 'viem/chains';
 
 export default function LaunchTokenPage() {
 
@@ -114,40 +128,83 @@ export default function LaunchTokenPage() {
 
   const handleLaunchToken = async () => {
     try {
-      // Request account access if needed
-      await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const factoryAddress = process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS as Address;
+      
+      // Log the parameters for debugging
+      console.log("Launch Token Parameters:", {
+        factoryAddress,
+        tokenName,
+        tokenSymbol,
+        supply: parseUnits(supply, 18).toString(),
+        price: parseUnits("1", 14).toString()
+      });
 
-      // Import the paymaster utilities
-      const { createPaymasterContract, executePaymasterTransaction } = await import('@/utils/paymasterUtils');
+      // Validate parameters
+      if (!tokenName || !tokenSymbol || !supply) {
+        console.error("Missing required parameters");
+        return [];
+      }
 
-      // Create a contract with paymaster support
-      const contract = await createPaymasterContract(
-        process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS!,
-        factory_contract_abi
-      );
-
-      console.log("Factory address:", process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS);
-
-      // Execute the transaction with paymaster support
-      const receipt = await executePaymasterTransaction(
-        contract,
-        'launchToken',
-        [
+      const contracts: ContractFunctionParameters[] = [{
+        address: factoryAddress,
+        abi: factory_contract_abi,
+        functionName: 'launchToken',
+        args: [
           tokenName,
           tokenSymbol,
           parseUnits(supply, 18),
           parseUnits("1", 14)
-        ]
-      );
+        ],
+        meta: {
+          description: `Launch ${tokenName} (${tokenSymbol}) token`
+        }
+      }];
 
-      console.log("Transaction mined:", receipt);
+      console.log("Contract parameters:", contracts);
+      return contracts;
+    } catch (error) {
+      console.error("❌ Launch token failed:", error);
+      return [];
+    }
+  };
+
+  const handleSuccess = async (response: TransactionResponse) => {
+    console.log("Full transaction response:", JSON.stringify(response, null, 2));
+    console.log("Response type:", typeof response);
+    console.log("Response keys:", Object.keys(response));
+    console.log("Response prototype:", Object.getPrototypeOf(response));
+    console.log("Response toString:", response.toString());
+    
+    try {
+      // Create a public client to fetch transaction receipt
+      const publicClient = createPublicClient({
+        chain: baseSepolia,
+        transport: http()
+      });
+
+      // Log the response for inspection
+      console.log('Transaction response: ==============>>>>>>>>', response);
+      // Get transaction receipt using the transaction hash
+      const receipt = await publicClient.getTransactionReceipt({
+        hash: response.hash as `0x${string}`
+      });
+
+      if (!receipt) {
+        console.error("No transaction receipt found");
+        return;
+      }
 
       const iface = new Interface(factory_contract_abi);
       let tokenAddress: string | null = null;
 
+      // Parse logs from the receipt
       for (const log of receipt.logs) {
         try {
-          const parsed = iface.parseLog(log) as LogDescription;
+          const parsed = iface.parseLog({
+            topics: log.topics as string[],
+            data: log.data
+          }) as LogDescription;
+          
           if (parsed.name === "TokenLaunched") {
             tokenAddress = parsed.args.token;
             console.log("🚀 Token launched!", tokenAddress);
@@ -165,12 +222,14 @@ export default function LaunchTokenPage() {
       } else {
         console.warn("⚠️ No TokenLaunched event found — skipping API update");
       }
-
     } catch (error) {
-      console.error("❌ Launch token failed:", error);
+      console.error("Error processing transaction:", error);
     }
   };
 
+  const handleError = (error: TransactionError) => {
+    console.error("❌ Launch token failed:", error);
+  };
 
   const handleUploadClick = (type: "icon" | "banner") => {
     const inputRef = type === "icon" ? iconInputRef : bannerInputRef;
@@ -390,28 +449,31 @@ export default function LaunchTokenPage() {
       />
      
 
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          mt: 4, // margin-top to create spacing from the form
-        }}
+      <Transaction
+        contracts={handleLaunchToken()}
+        className="w-full"
+        chainId={84532}
+        onError={handleError}
+        onSuccess={handleSuccess}
+        isSponsored={true}
       >
-        <Button
-          variant="contained"
-          onClick={handleLaunchToken}
-          sx={{
-            bgcolor: "#7f5af0",
-            textTransform: "none",
-            fontWeight: "bold",
-            "&:hover": { bgcolor: "#6848d8" },
-            width: "fit-content",
+        <TransactionButton 
+          className="w-full py-2 mt-2"
+          style={{
+            backgroundColor: '#9c27b0',
+            color: 'white',
+            borderRadius: '4px',
+            border: 'none',
+            cursor: 'pointer',
+            fontWeight: 'bold'
           }}
-        >
-          Launch
-        </Button>
-      </Box>
-
+          text="Launch Token"
+        />
+        <TransactionStatus>
+          <TransactionStatusLabel />
+          <TransactionStatusAction />
+        </TransactionStatus>
+      </Transaction>
 
     </Box>
   );
