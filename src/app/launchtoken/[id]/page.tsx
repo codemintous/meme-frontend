@@ -35,27 +35,43 @@ import { baseSepolia } from 'viem/chains';
 import { useAccount } from "wagmi";
 
 export default function LaunchTokenPage() {
-
-
+  // All hooks must be at the top, before any return
   const [iconImage, setIconImage] = useState<string | null>(null);
   const [bannerImage, setBannerImage] = useState<string | null>(null);
   const [tokenName, setTokenName] = useState("");
   const [tokenDesc, setTokenDesc] = useState("");
   const [tokenSymbol, setTokenSymbol] = useState("");
   const [supply, setSupply] = useState("");
-  // const [memeDetail , setMemeDetail] = useState<MemeAgent | null>(null)
-  const iconInputRef = React.useRef<HTMLInputElement>(null);
-  const bannerInputRef = React.useRef<HTMLInputElement>(null);
+  const iconInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
   const [socialLinks, setSocialLinks] = useState({
     twitter: '',
     instagram: '',
     facebook: '',
   });
-
-   const { isConnected, address } = useAccount();
-  const router =  useRouter();
+  const { isConnected, address } = useAccount();
+  const router = useRouter();
   const param = useParams();
   const id = param.id;
+  const { jwtToken } = useAuth();
+  const contractParams = useMemo(() => {
+    if (!tokenName || !tokenSymbol || !supply) return [];
+    const factoryAddress = process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS as Address;
+    return [{
+      address: factoryAddress,
+      abi: factory_contract_abi,
+      functionName: 'launchToken',
+      args: [
+        tokenName,
+        tokenSymbol,
+        parseUnits(supply, 18),
+        parseUnits("1", 14)
+      ],
+      meta: {
+        description: `Launch ${tokenName} (${tokenSymbol}) token`
+      }
+    }];
+  }, [tokenName, tokenSymbol, supply]);
 
   useEffect(() => {
     const fetchMemes = async () => {
@@ -84,11 +100,6 @@ export default function LaunchTokenPage() {
       fetchMemes();
     }
   }, [id]);
-
-
-
-
-  const { jwtToken } = useAuth();
 
   if (!jwtToken) {
     return (
@@ -128,26 +139,6 @@ export default function LaunchTokenPage() {
     }
   };
 
-  // Use useMemo to compute contract parameters only when relevant values change
-  const contractParams = useMemo(() => {
-    if (!tokenName || !tokenSymbol || !supply) return [];
-    const factoryAddress = process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS as Address;
-    return [{
-      address: factoryAddress,
-      abi: factory_contract_abi,
-      functionName: 'launchToken',
-      args: [
-        tokenName,
-        tokenSymbol,
-        parseUnits(supply, 18),
-        parseUnits("1", 14)
-      ],
-      meta: {
-        description: `Launch ${tokenName} (${tokenSymbol}) token`
-      }
-    }];
-  }, [tokenName, tokenSymbol, supply]);
-
   const handleSuccess = async (response: TransactionResponse) => {
     // Safely log the response
     console.log(
@@ -158,26 +149,17 @@ export default function LaunchTokenPage() {
       )
     );
 
-    // Find the correct hash property
-    const txHash = response.hash || response.transactionHash || response.txHash || response.tx;
-    if (!txHash) {
-      console.error("No transaction hash found in response", response);
+    // Get the first transaction receipt
+    const txReceipt = response.transactionReceipts?.[0];
+    if (!txReceipt) {
+      console.error("No transaction receipt found in response", response);
       return;
     }
-
-    // Fetch the receipt
-    const publicClient = createPublicClient({
-      chain: baseSepolia,
-      transport: http()
-    });
-    const receipt = await publicClient.getTransactionReceipt({
-      hash: txHash as `0x${string}`
-    });
 
     // Parse logs for TokenLaunched event
     const iface = new Interface(factory_contract_abi);
     let tokenAddress: string | null = null;
-    for (const log of receipt.logs) {
+    for (const log of txReceipt.logs) {
       try {
         const parsed = iface.parseLog({
           topics: log.topics as string[],
@@ -229,10 +211,6 @@ export default function LaunchTokenPage() {
       console.error(error);
     }
   };
-
-
-
-
 
   const commonTextFieldStyles = {
     "& .MuiInputBase-input": { color: "white" },
@@ -402,8 +380,6 @@ export default function LaunchTokenPage() {
           );
         })}
       </Box>
-
-
 
       <Divider sx={{ borderColor: "gray", mb: 2 }} />
       <Typography variant="subtitle2" sx={{ mb: 1 }}>
