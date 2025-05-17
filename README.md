@@ -6,32 +6,6 @@ This project is built for the next generation of internet culture, combining AI,
 
 ---
 
-## 🚀 Features
-
-### 🪙 Mint Meme Coins Instantly
-Launch custom meme tokens in just a few clicks — complete with metadata and community utility.
-
-### 🤖 Chat with Meme AI Agents
-Every meme becomes an AI-powered agent with a unique personality. Chat, laugh, or even get roasted.
-
-### 🎨 Generate Meme Art with AI
-Use credits to generate meme-based art from text prompts using powerful generative AI models.
-
-### 🌐 Create Meme Generator Communities
-Users can launch meme generator communities with:
-
-- ✅ **100 free credits** for each new member  
-- 🎨 1 credit = 1 meme generated  
-- 💸 Donate memes using platform tokens  
-- 📈 Invest in community tokens with real value
-
-### ⛽ Gasless Transactions via Paymaster
-All actions — minting, chatting, generating, donating — are completely gasless, sponsored by a smart Paymaster system.
-
----
-
-
-
 
 ## OnchainKit and Paymaster Integration
 
