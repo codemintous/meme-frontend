@@ -32,6 +32,7 @@ import type {
 import type { ContractFunctionParameters, Address } from 'viem';
 import { createPublicClient, http } from 'viem';
 import { baseSepolia } from 'viem/chains';
+import { useAccount } from "wagmi";
 
 export default function LaunchTokenPage() {
 
@@ -51,6 +52,7 @@ export default function LaunchTokenPage() {
     facebook: '',
   });
 
+   const { isConnected, address } = useAccount();
   const router =  useRouter();
   const param = useParams();
   const id = param.id;
@@ -126,45 +128,113 @@ export default function LaunchTokenPage() {
     }
   };
 
+  // const handleLaunchToken = async () => {
+  //   try {
+  //     const factoryAddress = process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS as Address;
+      
+  //     // Log the parameters for debugging
+  //     console.log("Launch Token Parameters:", {
+  //       factoryAddress,
+  //       tokenName,
+  //       tokenSymbol,
+  //       supply: parseUnits(supply, 18).toString(),
+  //       price: parseUnits("1", 14).toString()
+  //     });
+
+  //     // Validate parameters
+  //     if (!tokenName || !tokenSymbol || !supply) {
+  //       console.error("Missing required parameters");
+  //       return [];
+  //     }
+
+  //     const contracts: ContractFunctionParameters[] = [{
+  //       address: factoryAddress,
+  //       abi: factory_contract_abi,
+  //       functionName: 'launchToken',
+  //       args: [
+  //         tokenName,
+  //         tokenSymbol,
+  //         parseUnits(supply, 18),
+  //         parseUnits("1", 14)
+  //       ],
+  //       meta: {
+  //         description: `Launch ${tokenName} (${tokenSymbol}) token`
+  //       }
+  //     }];
+
+  //     console.log("Contract parameters:", contracts);
+  //     return contracts;
+  //   } catch (error) {
+  //     console.error("❌ Launch token failed:", error);
+  //     return [];
+  //   }
+  // };
+
+
   const handleLaunchToken = async () => {
     try {
-      const factoryAddress = process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS as Address;
+      const provider = new BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+  
+      const network = await provider.getNetwork();
+      console.log("Connected to network:", network);
+  
+      const contract = new Contract(
+        process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS!,
+        factory_contract_abi,
+        signer
+      );
+  
+      const tx = await contract.launchToken(
+        tokenName,           // Replace with actual value
+      tokenSymbol,          // Replace with actual value
+      parseUnits(supply, 18),
+      parseUnits("1", 14)
+      );
+  
+      console.log("Transaction sent:", tx.hash);
+  
+      const receipt = await tx.wait();
+      console.log("Transaction mined:", receipt);
+
+      const iface = new Interface(factory_contract_abi);
+      let tokenAddress: string | null = null;
+  
+      for (const log of receipt.logs) {
+        try {
+          const parsed = iface.parseLog(log) as LogDescription;
       
-      // Log the parameters for debugging
-      console.log("Launch Token Parameters:", {
-        factoryAddress,
-        tokenName,
-        tokenSymbol,
-        supply: parseUnits(supply, 18).toString(),
-        price: parseUnits("1", 14).toString()
-      });
-
-      // Validate parameters
-      if (!tokenName || !tokenSymbol || !supply) {
-        console.error("Missing required parameters");
-        return [];
-      }
-
-      const contracts: ContractFunctionParameters[] = [{
-        address: factoryAddress,
-        abi: factory_contract_abi,
-        functionName: 'launchToken',
-        args: [
-          tokenName,
-          tokenSymbol,
-          parseUnits(supply, 18),
-          parseUnits("1", 14)
-        ],
-        meta: {
-          description: `Launch ${tokenName} (${tokenSymbol}) token`
+          if (parsed.name === "TokenLaunched") {
+            console.log("📦 Full TokenLaunched Event Object:", parsed); // Full parsed event
+            console.log("📌 Event Args:", parsed.args); // Only event arguments
+      
+            tokenAddress = parsed.args.token;
+            console.log("🚀 Token launched!", tokenAddress);
+            break;
+          }
+        } catch (err) {
+          // If log doesn't match the ABI event signature
+          console.log("Skipping log:", err);
         }
-      }];
-
-      console.log("Contract parameters:", contracts);
-      return contracts;
+      }
+      if (tokenAddress) {
+        console.log("✅ Token Address found:", tokenAddress);
+        await updateTokenDetails(tokenAddress);
+      } else {
+        console.warn("⚠️ No TokenLaunched event found — skipping API update");
+      }
+  
+  
+      // const event = receipt.logs.find((log: any) => log.fragment?.name === "TokenLaunched");
+  
+      // if (event) {
+      //   console.log("🚀 Token launched!", event);
+      //   console.log("Token Address:", event.args.token);
+      // } else {
+      //   console.error("❌ TokenLaunched event not found");
+      // }
     } catch (error) {
-      console.error("❌ Launch token failed:", error);
-      return [];
+      console.error("Launch token failed:", error);
     }
   };
 
