@@ -1,4 +1,4 @@
-import { BrowserProvider, Contract, JsonRpcProvider } from "ethers";
+import { BrowserProvider, Contract } from "ethers";
 
 // Add TypeScript declarations for window properties
 declare global {

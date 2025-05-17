@@ -519,7 +519,7 @@ export default function LaunchTokenPage() {
       />
      
 
-      <Transaction
+      {/* <Transaction
         contracts={handleLaunchToken()}
         className="w-full"
         chainId={84532}
@@ -543,7 +543,21 @@ export default function LaunchTokenPage() {
           <TransactionStatusLabel />
           <TransactionStatusAction />
         </TransactionStatus>
-      </Transaction>
+      </Transaction> */}
+
+<Button
+    variant="contained"
+    onClick={handleLaunchToken}
+    sx={{
+      bgcolor: "#7f5af0",
+      textTransform: "none",
+      fontWeight: "bold",
+      "&:hover": { bgcolor: "#6848d8" },
+      width: "fit-content",
+    }}
+  >
+    Launch
+  </Button>
 
     </Box>
   );

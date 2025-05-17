@@ -9,7 +9,6 @@ import {
     TextField,
     Typography,
     IconButton,
-    Divider,
     Menu,
     MenuItem,
     Paper,
@@ -17,7 +16,6 @@ import {
     CircularProgress
 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import SendIcon from '@mui/icons-material/Send';
 import { Info, Edit, ContentCopy } from '@mui/icons-material';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
@@ -28,7 +26,7 @@ import { useParams } from "next/navigation";
 import Link from 'next/link';
 import VideoIcon from '@mui/icons-material/VideoCall';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import { uploadToPinata } from "@/utils/pinataUploader";
+
 
 import { MemeAgent } from '@/utils/interface';
 import axios from 'axios';
@@ -66,14 +64,14 @@ export default function AgentDetailPage() {
     const [isSending, setIsSending] = useState(false);
 
     // Add interface for message type
-    interface ChatMessage {
-        conversationId: string;
-        message: string;
-        response: string;
-        imageUrl?: string;
-        userId: string;
-        timestamp: string;
-    }
+    // interface ChatMessage {
+    //     conversationId: string;
+    //     message: string;
+    //     response: string;
+    //     imageUrl?: string;
+    //     userId: string;
+    //     timestamp: string;
+    // }
 
     // Add function to extract images from chat history
     const extractImagesFromChat = (messages: any[]) => {

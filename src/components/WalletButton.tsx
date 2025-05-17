@@ -9,14 +9,14 @@ import { cbWalletConnector } from '@/provider/wagmi';
 
 const WalletButton = () => {
   useWalletAuth(); // triggers auth logic when wallet is connected
-  const { isConnected, address } = useAccount();
-  const { connect } = useConnect();
-  const { disconnect } = useDisconnect();
+  // const { isConnected, address } = useAccount();
+  // const { connect } = useConnect();
+  // const { disconnect } = useDisconnect();
 
   // Function to handle connecting with Coinbase Wallet
-  const handleConnect = () => {
-    connect({ connector: cbWalletConnector });
-  };
+  // const handleConnect = () => {
+  //   connect({ connector: cbWalletConnector });
+  // };
 
   return (
     <Box
