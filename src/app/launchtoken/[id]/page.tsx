@@ -15,6 +15,8 @@ import { useAuth } from "@/context/AuthContext";
 import ConnectWalletPrompt from "@/components/ConnectWalletPrompt";
 import { useParams } from "next/navigation";
 import factory_contract_abi from "@/data/factory_contract_abi.json"
+import agent_factory_contract_generator_abi from "@/data/agent_factory_contract_generator_abi.json"
+
 import { BrowserProvider, Contract, Interface, LogDescription, parseUnits } from "ethers";
 import axios from "axios";
 import { useRouter } from "next/navigation";
@@ -56,23 +58,44 @@ export default function LaunchTokenPage() {
   const { jwtToken } = useAuth();
   const contractParams = useMemo(() => {
     if (!tokenName || !tokenSymbol || !supply) return [];
+  
     const factoryAddress = process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS as Address;
-    return [{
-      address: factoryAddress,
-      abi: factory_contract_abi,
-      functionName: 'launchToken',
-      args: [
-        tokenName,
-        tokenSymbol,
-        parseUnits(supply, 18),
-        parseUnits("1", 14)
-      ],
-      meta: {
-        description: `Launch ${tokenName} (${tokenSymbol}) token`
+    const agentfactoryAddress = process.env.NEXT_PUBLIC_AGENT_FACTORY_CONTRACT_ADDRESS as Address;
+  
+    return [
+      {
+        address: agentfactoryAddress,
+        abi: agent_factory_contract_generator_abi,
+        functionName: 'createAgent',
+        args: [
+          tokenName,
+          tokenSymbol,
+        ],
+        meta: {
+          description: `Launch agent for ${tokenName} (${tokenSymbol})`
+        }
+      },
+      {
+        address: factoryAddress,
+        abi: factory_contract_abi,
+        functionName: 'launchToken',
+        args: [
+          tokenName,
+          tokenSymbol,
+          parseUnits(supply, 18),
+          parseUnits("1", 14)
+        ],
+        meta: {
+          description: `Launch ${tokenName} (${tokenSymbol}) token`
+        }
       }
-    }];
+    ];
   }, [tokenName, tokenSymbol, supply]);
+  
 
+
+
+  
   useEffect(() => {
     const fetchMemes = async () => {
       try {
@@ -107,7 +130,7 @@ export default function LaunchTokenPage() {
     );
   }
 
-  const updateTokenDetails = async (tokenAddress: string) => {
+  const updateTokenDetails = async (tokenAddress: string , agentAddress: string) => {
     if (!jwtToken) {
       console.error("No JWT token available");
       return;
@@ -118,11 +141,12 @@ export default function LaunchTokenPage() {
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/memes/${id}`,
         {
           tokenDetails: {
-            tokenAddress,
+            tokenAddress : tokenAddress,
             name: tokenName,
             symbol: tokenSymbol,
             description: tokenDesc,
           },
+          agentContractAddress: agentAddress,
         },
         {
           headers: {
@@ -139,8 +163,8 @@ export default function LaunchTokenPage() {
     }
   };
 
+
   const handleSuccess = async (response: TransactionResponse) => {
-    // Safely log the response
     console.log(
       "Full transaction response:",
       JSON.stringify(response, (key, value) =>
@@ -148,39 +172,64 @@ export default function LaunchTokenPage() {
         2
       )
     );
-
-    // Get the first transaction receipt
-    const txReceipt = response.transactionReceipts?.[0];
-    if (!txReceipt) {
-      console.error("No transaction receipt found in response", response);
-      return;
-    }
-
-    // Parse logs for TokenLaunched event
-    const iface = new Interface(factory_contract_abi);
+  
+    const factoryIface = new Interface(factory_contract_abi);
+    const agentFactoryIface = new Interface(agent_factory_contract_generator_abi);
+  
     let tokenAddress: string | null = null;
-    for (const log of txReceipt.logs) {
-      try {
-        const parsed = iface.parseLog({
-          topics: log.topics as string[],
-          data: log.data
-        }) as LogDescription;
-        if (parsed.name === "TokenLaunched") {
-          tokenAddress = parsed.args.token;
-          break;
+    let agentAddress: string | null = null;
+  
+    // Loop through all receipts if it's a batch
+    for (const txReceipt of response.transactionReceipts || []) {
+      if (!txReceipt?.logs) continue;
+  
+      for (const log of txReceipt.logs) {
+        // TokenLaunched event
+        try {
+          const parsedFactory = factoryIface.parseLog({
+            topics: log.topics as string[],
+            data: log.data
+          }) as LogDescription;
+  
+          if (parsedFactory.name === "TokenLaunched") {
+            tokenAddress = parsedFactory.args.token;
+            console.log("✅ TokenLaunched:", tokenAddress);
+            console.log("📜 Token Launch Tx Receipt:", txReceipt);
+          }
+        } catch (e) {
+          // Not a factory event
         }
-      } catch (err) {
-        // Not the right log, skip
+  
+        // AgentCreated event
+        try {
+          const parsedAgent = agentFactoryIface.parseLog({
+            topics: log.topics as string[],
+            data: log.data
+          }) as LogDescription;
+  
+          if (parsedAgent.name === "AgentCreated") {
+            agentAddress = parsedAgent.args[2]; // address is at index 2
+            console.log("🤖 AgentCreated - Agent Address:", agentAddress);
+            console.log("📜 Full AgentCreated Parsed Log:", parsedAgent);
+            console.log("📜 Agent Creation Tx Receipt:", txReceipt);
+          }
+        } catch (e) {
+          // Not an agent factory event
+        }
       }
     }
-
-    // Save to DB if found
-    if (tokenAddress) {
-      await updateTokenDetails(tokenAddress);
+  
+    if (tokenAddress , agentAddress) {
+      await updateTokenDetails(tokenAddress , agentAddress);
     } else {
       console.warn("⚠️ No TokenLaunched event found — skipping API update");
     }
+  
+    if (!agentAddress) {
+      console.warn("⚠️ No AgentCreated event found");
+    }
   };
+  
 
   const handleError = (error: TransactionError) => {
     console.error("❌ Launch token failed:", error);
