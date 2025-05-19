@@ -802,9 +802,9 @@ export default function AgentDetailPage() {
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                        // onFocus={() => {
-                        //     if (!isConnected) setIsShowWalletModal(true);
-                        // }}
+                        onFocus={() => {
+                            if (!isConnected) setIsShowWalletModal(true);
+                        }}
                         sx={{
                             bgcolor: '#181818',
                             borderRadius: '6px',
@@ -1061,42 +1061,7 @@ export default function AgentDetailPage() {
             </Dialog>
 
             <AgentPopup open={popupOpen} handleClose={() => setPopupOpen(false)} agent={memeDetail} />
-            <Dialog
-                open={isShowWalletModal}
-                onClose={() => setIsShowWalletModal(false)}
-               
-            >
-                <DialogContent
-                    sx={{
-                        bgcolor: '#121212',
-                        color: 'white',
-                        textAlign: 'center',
-                        p: 4,
-                        borderRadius: 2,
-                    }}
-                >
-                    <Typography variant="h6" mb={2}>
-                        Connect Your Wallet
-                    </Typography>
-                    <Typography variant="body2" mb={3}>
-                        To start chatting and trading, please connect your wallet.
-                    </Typography>
-
-                    <Box display="flex" justifyContent="center" gap={2}>
-                        <WalletButton />
-                        <Button
-                            variant="outlined"
-                            onClick={() => {
-                                console.log('Cancel clicked');
-                                setIsShowWalletModal(false);
-                              }}
-                            sx={{ color: 'white', borderColor: 'white' }}
-                        >
-                            Cancel
-                        </Button>
-                    </Box>
-                </DialogContent>
-            </Dialog>
+           
 
             <Dialog
                 open={donatePopup}
@@ -1145,6 +1110,49 @@ export default function AgentDetailPage() {
                         Donate
                     </Button>
                 </DialogActions>
+            </Dialog>
+
+
+
+
+            <Dialog
+                open={isShowWalletModal}
+                onClose={() => setIsShowWalletModal(false)}
+                PaperProps={{
+                    sx: {
+                        bgcolor: '#121212',
+                        color: 'white',
+                    }
+                }}
+            >
+                <DialogContent
+                    sx={{
+                        textAlign: 'center',
+                        p: 4,
+                        borderRadius: 2,
+                    }}
+                >
+                    <Typography variant="h6" mb={2}>
+                        Connect Your Wallet
+                    </Typography>
+                    <Typography variant="body2" mb={3}>
+                        To start chatting and trading, please connect your wallet.
+                    </Typography>
+
+                    <Box display="flex" justifyContent="center" gap={2}>
+                        <WalletButton />
+                        <Button
+                            variant="outlined"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsShowWalletModal(false);
+                            }}
+                            sx={{ color: 'white', borderColor: 'white' }}
+                        >
+                            Cancel
+                        </Button>
+                    </Box>
+                </DialogContent>
             </Dialog>
 
         </Box>
