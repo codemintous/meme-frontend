@@ -20,7 +20,6 @@ import {
   Plus,
   Rocket,
   Search,
-  TrendingUp,
   Trophy,
 
   UsersRound
@@ -68,12 +67,7 @@ const LogoContainer = styled(Box)({
   marginBottom: '32px'
 });
 
-const LogoCircle = styled(Box)({
-  width: '40px',
-  height: '40px',
-  backgroundColor: '#9333ea', // purple-600
-  borderRadius: '50%'
-});
+
 
 const NavItem = styled(ListItem)({
   borderRadius: '8px',
@@ -101,7 +95,7 @@ const Sidebar = () => {
   const [donatePopup, setDonatePopup] = useState(false);
   const [donateAmount, setDonateAmount] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [txStatus, setTxStatus] = useState<{hash?: string; status: string; error?: string}>({ status: '' });
+  const [txStatus, setTxStatus] = useState<{ hash?: string; status: string; error?: string }>({ status: '' });
 
   const fetchTokenBalance = async (
     address: string,
@@ -157,11 +151,11 @@ const Sidebar = () => {
     }
   };
 
-useEffect(() => {
+  useEffect(() => {
     if (address) {
-        fetchTokenBalance(address , setTokenBalance);
+      fetchTokenBalance(address, setTokenBalance);
     }
-  }, [ isConnected, address]);
+  }, [isConnected, address]);
 
 
   // Create contract parameters for onchainkit Transaction
@@ -169,29 +163,29 @@ useEffect(() => {
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
       return [];
     }
-    
+
     const contractAddress = process.env.NEXT_PUBLIC_PLATFORMBALANCE_CONTRACT_ADDRESS as Address;
     if (!contractAddress) {
       console.error("Contract address is not defined in environment variables");
       return [];
     }
-    
+
     // Format amount exactly like TradeForm
     const parsedAmount = parseFloat(amount);
     const displayAmount = parsedAmount.toString();
-    
+
     // Convert to BigInt for contract call - parseEther like in TradeForm
     const tokenAmount = parseEther(displayAmount);
     console.log('Creating transaction with amount:', displayAmount);
     console.log('Token amount in wei:', tokenAmount.toString());
-    
+
     // Define the contract function parameters following TradeForm pattern exactly
     return [{
       address: contractAddress,
       abi: platform_contract_abi,
       functionName: 'mintTokens',
       args: [tokenAmount], // Using parseEther value
-  
+
 
     }] as ContractFunctionParameters[];
   };
@@ -222,15 +216,15 @@ useEffect(() => {
   return (
     <SidebarContainer>
       <LogoContainer>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-    <Box
-      component="img"
-      src="/agents/memelogo.png" // replace with your actual image path
-      alt="Logo"
-      sx={{ width: 42, height: 42, borderRadius: '50%' }}
-    />
-    <Typography variant="h6" fontWeight="bold">MemeMinto AI</Typography>
-  </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Box
+            component="img"
+            src="/agents/memelogo.png" // replace with your actual image path
+            alt="Logo"
+            sx={{ width: 42, height: 42, borderRadius: '50%' }}
+          />
+          <Typography variant="h6" fontWeight="bold">MemeMinto AI</Typography>
+        </Box>
         <IconButton color="inherit" size="small">
           <ChevronLeft />
         </IconButton>
@@ -284,7 +278,7 @@ useEffect(() => {
 
       {/* Bottom Section */}
       <Box sx={{ mt: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      Platform Token Balance : <br />
+        Platform Token Balance : <br />
         <Button
           variant="outlined"
           fullWidth
@@ -292,80 +286,80 @@ useEffect(() => {
           sx={{
             borderColor: '#9333ea',
             color: '#9333ea',
-           
+
           }}
           onClick={() => setDonatePopup(true)}
 
         >
-         
-{Number(tokenBalance ?? 0).toFixed(2)} 
-</Button>
-<Link href={"/creatememe"}>
 
-        <Button
-          variant="contained"
-          fullWidth
-          startIcon={<Plus size={20} />}
-          sx={{ backgroundColor: '#9333ea', '&:hover': { backgroundColor: '#7e22ce' } }}
-        >
+          {Number(tokenBalance ?? 0).toFixed(2)}
+        </Button>
+        <Link href={"/creatememe"}>
+
+          <Button
+            variant="contained"
+            fullWidth
+            startIcon={<Plus size={20} />}
+            sx={{ backgroundColor: '#9333ea', '&:hover': { backgroundColor: '#7e22ce' } }}
+          >
             Create Meme
 
-        </Button>
+          </Button>
         </Link>
 
         <WalletButton />
       </Box>
 
 
-       <Dialog
-          open={donatePopup}
-          onClose={() => setDonatePopup(false)}
-          PaperProps={{
-            sx: {
-              backdropFilter: 'blur(12px)',
-              background: 'rgba(30,30,30,0.85)',
-              borderRadius: 4,
-              color: 'white',
-              minWidth: 400,
-              boxShadow: 8,
-              p: 2,
-              position: 'relative'
-            },
-          }}
-        >
-          {/* Close icon */}
-          <Box sx={{ position: 'absolute', top: 12, right: 14, zIndex: 2 }}>
-            <button onClick={() => setDonatePopup(false)} style={{ background: 'none', border: 'none', color: '#aaa', fontSize: 22, cursor: 'pointer' }}>&times;</button>
-          </Box>
-          <DialogContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, p: 3 }}>
-            <Typography variant="h5" fontWeight={700} mb={1} sx={{ letterSpacing: 1, color: '#fff' }}>Mint Tokens</Typography>
-            <Typography variant="subtitle2" sx={{ color: '#aaa', mb: 2 }}>Mint Meme tokens instantly to your wallet. Gasless & sponsored!</Typography>
-                          {/* <Typography variant="h6" mb={2}>Mint Tokens</Typography> */}
-      
-            <TextField
-              label="Amount to Mint"
-              type="number"
-              fullWidth
-              disabled={isLoading}
-              value={donateAmount}
-              onChange={(e) => setDonateAmount(e.target.value)}
-              InputProps={{
-                sx: { color: "white", fontSize: 22, fontWeight: 600, letterSpacing: 1, borderRadius: 2, background: 'rgba(255,255,255,0.04)' }
-              }}
-              InputLabelProps={{
-                sx: { color: "#aaa", fontWeight: 400, fontSize: 15 }
-              }}
-              sx={{
-                mb: 2,
-                '& .MuiOutlinedInput-root': {
-                  '& fieldset': { borderColor: 'rgba(147, 51, 234, 0.3)' },
-                  '&:hover fieldset': { borderColor: '#9333ea' },
-                  '&.Mui-focused fieldset': { borderColor: '#9333ea' },
-                }
-              }}
-            />
-            {/* Live Preview */}
-            {/* {donateAmount && Number(donateAmount) > 0 && (
+      <Dialog
+        open={donatePopup}
+        onClose={() => setDonatePopup(false)}
+        PaperProps={{
+          sx: {
+            backdropFilter: 'blur(12px)',
+            background: 'rgba(30,30,30,0.85)',
+            borderRadius: 4,
+            color: 'white',
+            minWidth: 400,
+            boxShadow: 8,
+            p: 2,
+            position: 'relative'
+          },
+        }}
+      >
+        {/* Close icon */}
+        <Box sx={{ position: 'absolute', top: 12, right: 14, zIndex: 2 }}>
+          <button onClick={() => setDonatePopup(false)} style={{ background: 'none', border: 'none', color: '#aaa', fontSize: 22, cursor: 'pointer' }}>&times;</button>
+        </Box>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, p: 3 }}>
+          <Typography variant="h5" fontWeight={700} mb={1} sx={{ letterSpacing: 1, color: '#fff' }}>Mint Tokens</Typography>
+          <Typography variant="subtitle2" sx={{ color: '#aaa', mb: 2 }}>Mint Meme tokens instantly to your wallet. Gasless & sponsored!</Typography>
+          {/* <Typography variant="h6" mb={2}>Mint Tokens</Typography> */}
+
+          <TextField
+            label="Amount to Mint"
+            type="number"
+            fullWidth
+            disabled={isLoading}
+            value={donateAmount}
+            onChange={(e) => setDonateAmount(e.target.value)}
+            InputProps={{
+              sx: { color: "white", fontSize: 22, fontWeight: 600, letterSpacing: 1, borderRadius: 2, background: 'rgba(255,255,255,0.04)' }
+            }}
+            InputLabelProps={{
+              sx: { color: "#aaa", fontWeight: 400, fontSize: 15 }
+            }}
+            sx={{
+              mb: 2,
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': { borderColor: 'rgba(147, 51, 234, 0.3)' },
+                '&:hover fieldset': { borderColor: '#9333ea' },
+                '&.Mui-focused fieldset': { borderColor: '#9333ea' },
+              }
+            }}
+          />
+          {/* Live Preview */}
+          {/* {donateAmount && Number(donateAmount) > 0 && (
               <Box sx={{
                 display: 'flex', alignItems: 'center', gap: 1, mb: 1, px: 2, py: 1,
                 bgcolor: 'rgba(147,51,234,0.08)', borderRadius: 2, border: '1px solid #9333ea',
@@ -375,38 +369,38 @@ useEffect(() => {
                 <Typography variant="h6" sx={{ color: '#9333ea', fontWeight: 700, letterSpacing: 1 }}>+{donateAmount} MEME</Typography>
               </Box>
             )} */}
-                          
 
-                          {/* Transaction Status */}
-                          {isLoading && (
-                            <Box sx={{ mt: 1, textAlign: 'center' }}>
-                              <Typography variant="body2" sx={{ color: "white", mb: 1 }}>
-                                {txStatus.status}
-                              </Typography>
-                              {txStatus.hash && (
-                                <Typography variant="caption" sx={{ color: "#9333ea" }}>
-                                  Transaction Hash: {txStatus.hash.slice(0, 6)}...{txStatus.hash.slice(-4)}
-                                </Typography>
-                              )}
-                            </Box>
-                          )}
-                          
 
-                          {txStatus.error && (
-                            <Typography variant="body2" sx={{ color: "red", mt: 1 }}>
-                              Error: {txStatus.error}
-                            </Typography>
-                          )}
-                          
+          {/* Transaction Status */}
+          {isLoading && (
+            <Box sx={{ mt: 1, textAlign: 'center' }}>
+              <Typography variant="body2" sx={{ color: "white", mb: 1 }}>
+                {txStatus.status}
+              </Typography>
+              {txStatus.hash && (
+                <Typography variant="caption" sx={{ color: "#9333ea" }}>
+                  Transaction Hash: {txStatus.hash.slice(0, 6)}...{txStatus.hash.slice(-4)}
+                </Typography>
+              )}
+            </Box>
+          )}
 
-                          {txStatus.status === 'Success! Tokens minted successfully' && (
-                            <Typography variant="body2" sx={{ color: "#4ade80", mt: 1 }}>
-                              Success! Tokens have been minted to your account.
-                            </Typography>
-                          )}
-                      </DialogContent>
-                      <DialogActions>
-                          {/* <Button 
+
+          {txStatus.error && (
+            <Typography variant="body2" sx={{ color: "red", mt: 1 }}>
+              Error: {txStatus.error}
+            </Typography>
+          )}
+
+
+          {txStatus.status === 'Success! Tokens minted successfully' && (
+            <Typography variant="body2" sx={{ color: "#4ade80", mt: 1 }}>
+              Success! Tokens have been minted to your account.
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          {/* <Button 
                             onClick={() => {
                               setDonatePopup(false);
                               setTxStatus({ status: '' });
@@ -416,42 +410,33 @@ useEffect(() => {
                           >
                               Close
                           </Button> */}
-                          {/* Replace button with Transaction component */}
-                          {/* Using a key to force re-render when amount changes */}
-                          <Transaction
-                            key={`mint-transaction-${donateAmount}`}
-                            contracts={getContracts(donateAmount)}
-                            chainId={84532} // Base Sepolia Chain ID
-                            onError={handleError}
-                            onSuccess={handleSuccess}
-                            isSponsored={true}
-                          >
-                            <TransactionButton 
-                              style={{
-                                color: "white", 
-                                backgroundColor: "#9333ea",
-                                padding: '8px 16px',
-                                borderRadius: '4px',
-                                border: 'none',
-                                cursor: 'pointer',
-                                fontWeight: 'bold',
-                                minWidth: '120px'
-                              }}
-                              disabled={!donateAmount || isLoading || Number(donateAmount) <= 0}
-                              text={isLoading ? 'Processing...' : `Mint ${donateAmount} Tokens`}
-                              onClick={() => setIsLoading(true)}
-                            />
-                            <Box sx={{ mt: 2 }}>
-                              <TransactionStatus>
-                                <TransactionStatusLabel />
-                                <TransactionStatusAction />
-                              </TransactionStatus>
-                            </Box>
-                          </Transaction>
-                          
+          {/* Replace button with Transaction component */}
+          {/* Using a key to force re-render when amount changes */}
+          <Transaction
+            key={`mint-transaction-${donateAmount}`}
+            contracts={getContracts(donateAmount)}
+            chainId={84532} // Base Sepolia Chain ID
+            onError={handleError}
+            onSuccess={handleSuccess}
+            isSponsored={true}
+          >
+            <TransactionButton
+               className="bg-purple-600 text-white font-bold py-2 px-4 rounded min-w-[120px] cursor-pointer"
+               disabled={!donateAmount || isLoading || Number(donateAmount) <= 0}
+               text={isLoading ? 'Processing...' : `Mint ${donateAmount} Tokens`}
+              // onClick={() => setIsLoading(true)} // ✅ use onClick, not onSubmit
+            />
+            <Box sx={{ mt: 2 }}>
+              <TransactionStatus>
+                <TransactionStatusLabel />
+                <TransactionStatusAction />
+              </TransactionStatus>
+            </Box>
+          </Transaction>
 
-                          {/* Display transaction preview to help debug */}
-                          {/* {donateAmount && Number(donateAmount) > 0 && (
+
+          {/* Display transaction preview to help debug */}
+          {/* {donateAmount && Number(donateAmount) > 0 && (
                             <Box sx={{ mt: 2, p: 1, bgcolor: '#333', borderRadius: 1 }}>
                               <Typography variant="subtitle2" sx={{ color: '#fff' }}>Transaction Preview:</Typography>
                               <Typography variant="body2" sx={{ color: '#4caf50' }}>
@@ -460,8 +445,8 @@ useEffect(() => {
                               <Typography variant="caption" sx={{ color: '#aaa' }}>Gasless transaction | Sponsored</Typography>
                             </Box>
                           )} */}
-                      </DialogActions>
-                  </Dialog>
+        </DialogActions>
+      </Dialog>
     </SidebarContainer>
   );
 };

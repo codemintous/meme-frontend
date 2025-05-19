@@ -4,7 +4,6 @@ import {
   Button,
   Container,
   Link,
-  TextField,
   Typography,
 } from "@mui/material";
 import {
@@ -12,10 +11,9 @@ import {
 } from "@mui/icons-material";
 import TrendingAgentCard from "@/components/TrendingAgentCard";
 import TrendingTokenCard from "@/components/TrendingTokenCard";
-import DiscoverAgentCard from "@/components/DiscoverAgentCard";
+
 import { useEffect, useState } from "react";
-import LatestMemes from "@/components/LatestMemes";
-import homePageData from '../data/homePageData.json';
+
 import HorizontalScrollSection from "@/components/HorizontalScrollSection";
 import Providers from '../provider/providers';
 import TokenChartTradeSection from "@/components/TokenChartTradeSection"; 
@@ -28,8 +26,8 @@ export default function Home() {
   const [memeAgents, setMemeAgents] = useState<MemeAgent[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedToken, setSelectedToken] =  useState<MemeAgent | null>(null);
-  const { trendingAgents, latestMemes } = homePageData;
-  const [searchTerm, setSearchTerm] = useState("");
+  // const { trendingAgents, latestMemes } = homePageData;
+  // const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const fetchMemes = async () => {
@@ -53,10 +51,10 @@ export default function Home() {
 
 
 
-  const handleSearch = () => {
-    console.log("Searching for:", searchTerm);
-    // Optional: apply a filter or fetch new results
-  };
+  // const handleSearch = () => {
+  //   console.log("Searching for:", searchTerm);
+  //   // Optional: apply a filter or fetch new results
+  // };
 
   return (
     <Providers>

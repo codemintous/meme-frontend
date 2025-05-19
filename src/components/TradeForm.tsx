@@ -68,27 +68,27 @@ export default function TradeForm({
   // };
 
   // Validate inputs
-  const isValidInput = () => {
-    const parsedAmount = parseFloat(amount);
-    const parsedSlippage = parseFloat(slippage);
+  // const isValidInput = () => {
+  //   const parsedAmount = parseFloat(amount);
+  //   const parsedSlippage = parseFloat(slippage);
 
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      alert('Please enter a valid amount');
-      return false;
-    }
+  //   if (isNaN(parsedAmount) || parsedAmount <= 0) {
+  //     alert('Please enter a valid amount');
+  //     return false;
+  //   }
 
-    if (isNaN(parsedSlippage) || parsedSlippage < 0 || parsedSlippage > 100) {
-      alert('Please enter a valid slippage percentage (0-100)');
-      return false;
-    }
+  //   if (isNaN(parsedSlippage) || parsedSlippage < 0 || parsedSlippage > 100) {
+  //     alert('Please enter a valid slippage percentage (0-100)');
+  //     return false;
+  //   }
 
-    if (!isValidTokenAddress(tokenAddress)) {
-      alert("This token doesn't have a valid contract address. It may not have been launched yet.");
-      return false;
-    }
+  //   if (!isValidTokenAddress(tokenAddress)) {
+  //     alert("This token doesn't have a valid contract address. It may not have been launched yet.");
+  //     return false;
+  //   }
 
-    return true;
-  };
+  //   return true;
+  // };
 
   // Create contract parameters for onchainkit Transaction
   const contracts = useMemo(() => {
@@ -319,21 +319,11 @@ export default function TradeForm({
           onSuccess={handleSuccess}
           isSponsored={true}
         >
-          {/* @ts-ignore - The TransactionButton component does accept children */}
+          
           <TransactionButton 
-            className="w-full py-2 mt-2"
-            style={{
-              backgroundColor: mode === 'buy' ? '#9c27b0' : '#f44336',
-              color: 'white',
-              borderRadius: '4px',
-              border: 'none',
-              cursor: 'pointer',
-              fontWeight: 'bold'
-            }}
-            text={mode === "buy" ? "Buy" : "Sell"}
-          >
-            {mode === "buy" ? "Buy" : "Sell"}
-          </TransactionButton>
+            className="w-full py-2 mt-2 bg-[#9c27b0] text-white rounded border-none cursor-pointer font-bold hover:bg-[#7b1fa2]"
+            text={mode === 'buy' ? 'Buy' : 'Sell'}
+          />
           <TransactionStatus>
             <TransactionStatusLabel />
             <TransactionStatusAction />

@@ -6,9 +6,7 @@ import {
   Avatar,
   Button,
   IconButton,
-  Grid,
   Link,
-  Divider,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import RedeemIcon from '@mui/icons-material/Redeem';
@@ -100,16 +98,16 @@ export default function AgentPopup({ open, handleClose, agent }: AgentPopupProps
           <Typography variant="h6" color="white" gutterBottom>
             Token Details
           </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={6}>
+          <Box display="flex" flexWrap="wrap" gap={2}>
+            <Box flex="1 1 45%">
               <Typography variant="body2" color="gray">Name</Typography>
               <Typography variant="body1" color="white">{agent.tokenDetails.name}</Typography>
-            </Grid>
-            <Grid item xs={6}>
+            </Box>
+            <Box flex="1 1 45%">
               <Typography variant="body2" color="gray">Symbol</Typography>
               <Typography variant="body1" color="white">{agent.tokenDetails.symbol}</Typography>
-            </Grid>
-            <Grid item xs={12}>
+            </Box>
+            <Box width="100%">
               <Typography variant="body2" color="gray">Contract Address</Typography>
               <Link 
                 href={`https://sepolia.basescan.org/address/${agent.tokenDetails.tokenAddress}`}
@@ -125,12 +123,12 @@ export default function AgentPopup({ open, handleClose, agent }: AgentPopupProps
                   {agent.tokenDetails.tokenAddress}
                 </Typography>
               </Link>
-            </Grid>
-            <Grid item xs={12}>
+            </Box>
+            <Box width="100%">
               <Typography variant="body2" color="gray">Description</Typography>
               <Typography variant="body1" color="white">{agent.tokenDetails.description}</Typography>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
         </Box>
 
         {/* Agent Details */}
@@ -145,22 +143,22 @@ export default function AgentPopup({ open, handleClose, agent }: AgentPopupProps
           <Typography variant="h6" color="white" gutterBottom>
             Agent Details
           </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
+          <Box display="flex" flexDirection="column" gap={2}>
+            <Box>
               <Typography variant="body2" color="gray">Personality</Typography>
               <Typography variant="body1" color="white">{agent.personality}</Typography>
-            </Grid>
-            <Grid item xs={12}>
+            </Box>
+            <Box>
               <Typography variant="body2" color="gray">Creator</Typography>
               <Typography variant="body1" color="white">{agent.creator}</Typography>
-            </Grid>
-            <Grid item xs={12}>
+            </Box>
+            <Box>
               <Typography variant="body2" color="gray">Created</Typography>
               <Typography variant="body1" color="white">
                 {new Date(agent.createdAt).toLocaleDateString()}
               </Typography>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
         </Box>
 
         {/* Credits Section */}

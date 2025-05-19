@@ -9,7 +9,6 @@ import {
     TextField,
     Typography,
     IconButton,
-    Divider,
     Menu,
     MenuItem,
     Paper,
@@ -17,7 +16,6 @@ import {
     CircularProgress
 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import SendIcon from '@mui/icons-material/Send';
 import { Info, Edit, ContentCopy } from '@mui/icons-material';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
@@ -28,7 +26,6 @@ import { useParams } from "next/navigation";
 import Link from 'next/link';
 import VideoIcon from '@mui/icons-material/VideoCall';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import { uploadToPinata } from "@/utils/pinataUploader";
 
 import { MemeAgent } from '@/utils/interface';
 import axios from 'axios';
@@ -41,6 +38,23 @@ import { useAuth } from '@/context/AuthContext';
 import platform_contract_abi from "@/data/platform_contract_abi.json"
 import { BrowserProvider, Contract, formatUnits, parseEther } from "ethers";
 
+// Add these interfaces at the top of the file
+interface ChatMessage {
+    conversationId: string;
+    message: string;
+    response: string;
+    imageUrl?: string;
+    userId: string;
+    timestamp: string;
+}
+
+interface ApiError {
+    message: string;
+    response?: {
+        data?: unknown;
+        status?: number;
+    };
+}
 
 export default function AgentDetailPage() {
     const [tab, setTab] = useState(0);
@@ -65,22 +79,12 @@ export default function AgentDetailPage() {
     const [communityImages, setCommunityImages] = useState<string[]>([]);
     const [isSending, setIsSending] = useState(false);
 
-    // Add interface for message type
-    interface ChatMessage {
-        conversationId: string;
-        message: string;
-        response: string;
-        imageUrl?: string;
-        userId: string;
-        timestamp: string;
-    }
-
     // Add function to extract images from chat history
-    const extractImagesFromChat = (messages: any[]) => {
+    const extractImagesFromChat = (messages: ChatMessage[]) => {
         const images = messages
             .filter(msg => msg.imageUrl)
             .map(msg => msg.imageUrl);
-        return [...new Set(images)]; // Remove duplicates
+        return [...new Set(images)] as string[]; // Remove duplicates
     };
 
     // Update loadChatHistory to also set community images
@@ -118,7 +122,7 @@ export default function AgentDetailPage() {
                 setCommunityImages(images);
 
                 // Transform the chat history into our message format with proper typing
-                const formattedMessages = sortedMessages.flatMap((chat: any) => {
+                const formattedMessages = sortedMessages.flatMap((chat: ChatMessage) => {
                     console.log('Processing chat message:', chat);
                     
                     // Create messages for both user message and bot response
@@ -164,11 +168,12 @@ export default function AgentDetailPage() {
             } else {
                 console.error('Invalid chat history response format:', response.data);
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const apiError = error as ApiError;
             console.error('Error loading chat history:', {
-                message: error.message,
-                response: error.response?.data,
-                status: error.response?.status
+                message: apiError.message,
+                response: apiError.response?.data,
+                status: apiError.response?.status
             });
         }
     };
@@ -192,28 +197,28 @@ export default function AgentDetailPage() {
     }, []);
 
     // Modify saveChatMessage to reload chat history after saving
-    const saveChatMessage = async (message: string, isImage: boolean = false) => {
-        try {
-            await axios.post(
-                `${process.env.NEXT_PUBLIC_BASE_URL}/api/agent/chat`,
-                {
-                    agentId: agentId,
-                    message: message,
-                    isImage: isImage
-                },
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${jwtToken}`
-                    }
-                }
-            );
-            // Reload chat history after saving
-            await loadChatHistory();
-        } catch (error) {
-            console.error('Error saving chat message:', error);
-        }
-    };
+    // const saveChatMessage = async (message: string, isImage: boolean = false) => {
+    //     try {
+    //         await axios.post(
+    //             `${process.env.NEXT_PUBLIC_BASE_URL}/api/agent/chat`,
+    //             {
+    //                 agentId: agentId,
+    //                 message: message,
+    //                 isImage: isImage
+    //             },
+    //             {
+    //                 headers: {
+    //                     'Content-Type': 'application/json',
+    //                     'Authorization': `Bearer ${jwtToken}`
+    //                 }
+    //             }
+    //         );
+    //         // Reload chat history after saving
+    //         await loadChatHistory();
+    //     } catch (error) {
+    //         console.error('Error saving chat message:', error);
+    //     }
+    // };
 
     useEffect(() => {
         const fetchMemes = async () => {
@@ -293,11 +298,14 @@ export default function AgentDetailPage() {
                         console.error('Invalid response format:', response.data);
                         setUserImages([]);
                     }
-                } catch (error: any) {
+                } catch (error: unknown) {
+                    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+                    const errorResponse = error as { response?: { status?: number; data?: unknown } };
+                    
                     console.error("Error fetching user images:", {
-                        message: error.message,
-                        status: error.response?.status,
-                        data: error.response?.data
+                        message: errorMessage,
+                        status: errorResponse.response?.status,
+                        data: errorResponse.response?.data
                     });
                     setUserImages([]);
                 }
@@ -399,15 +407,22 @@ export default function AgentDetailPage() {
                     }
                 );
                 console.log('User message save response:', saveResponse.data);
-            } catch (error: any) {
-                console.error('Error saving user message:', {
-                    message: error.message,
-                    response: error.response?.data,
-                    status: error.response?.status
-                });
+            } catch (error: unknown) {
+                if (axios.isAxiosError(error)) {
+                    console.error('Error saving user message:', {
+                        message: error.message,
+                        response: error.response?.data,
+                        status: error.response?.status,
+                    });
+                } else {
+                    console.error('Unknown error:', error);
+                }
                 setIsSending(false);
                 return;
             }
+
+
+            
 
             setMessages([...messages, userMessage, loadingMessage]);
             setInputValue('');
@@ -461,12 +476,17 @@ export default function AgentDetailPage() {
                                 }
                             );
                             console.log('Image message save response:', imageSaveResponse.data);
-                        } catch (error: any) {
-                            console.error('Error saving image message:', {
-                                message: error.message,
-                                response: error.response?.data,
-                                status: error.response?.status
-                            });
+                        }  catch (error: unknown) {
+                            if (axios.isAxiosError(error)) {
+                                console.error('Error saving user image:', {
+                                    message: error.message,
+                                    response: error.response?.data,
+                                    status: error.response?.status,
+                                });
+                            } else {
+                                console.error('Unknown error:', error);
+                            }
+                    
                         }
 
                         setMessages((prev) => [
@@ -474,16 +494,24 @@ export default function AgentDetailPage() {
                             { text: generatedImageUrl, sender: 'image' as const },
                         ]);
 
-                    } catch (error: any) {
-                        console.error('Error in image generation process:', {
-                            message: error.message,
-                            response: error.response?.data,
-                            status: error.response?.status
-                        });
-                        setMessages((prev) => [
-                            ...prev.slice(0, -1),
-                            { text: `Failed to generate meme: ${error?.message || 'Unknown error'}`, sender: 'bot' as const },
-                        ]);
+                    } catch (error: unknown) {
+                        if (axios.isAxiosError(error)) {
+                            console.error('Error in image generation process:', {
+                                message: error.message,
+                                response: error.response?.data,
+                                status: error.response?.status
+                            });
+                            setMessages((prev) => [
+                                ...prev.slice(0, -1),
+                                { text: `Failed to generate meme: ${error.message}`, sender: 'bot' as const },
+                            ]);
+                        } else {
+                            console.error('Unknown error in image generation process:', error);
+                            setMessages((prev) => [
+                                ...prev.slice(0, -1),
+                                { text: `Failed to generate meme: Unknown error`, sender: 'bot' as const },
+                            ]);
+                        }
                     }
                 } else {
                     try {
@@ -526,23 +554,30 @@ export default function AgentDetailPage() {
                                 }
                             );
                             console.log('Bot response save response:', botSaveResponse.data);
-                        } catch (error: any) {
-                            console.error('Error saving bot response:', {
-                                message: error.message,
-                                response: error.response?.data,
-                                status: error.response?.status
-                            });
+                        } catch (error: unknown) {
+                            if (axios.isAxiosError(error)) {
+                                console.error('Error saving bot response:', {
+                                    message: error.message,
+                                    response: error.response?.data,
+                                    status: error.response?.status,
+                                });
+                            } else {
+                                console.error('Unknown error:', error);
+                            }
+                    
                         }
+
 
                         setMessages((prev) => [
                             ...prev.slice(0, -1),
                             { text: response.data.response, sender: 'bot' as const },
                         ]);
-                    } catch (error: any) {
+                    } catch (error: unknown) {
+                        const apiError = error as ApiError;
                         console.error('Error sending message:', {
-                            message: error.message,
-                            response: error.response?.data,
-                            status: error.response?.status
+                            message: apiError.message,
+                            response: apiError.response?.data,
+                            status: apiError.response?.status
                         });
                         setMessages((prev) => [
                             ...prev.slice(0, -1),

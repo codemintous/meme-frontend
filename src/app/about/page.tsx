@@ -55,7 +55,7 @@ export default function AboutPage() {
                             Our Mission
                         </h2>
                         <p className="text-xl text-gray-300 text-center leading-relaxed">
-                            We're building the world's first AI-powered meme marketplace, turning internet culture into on-chain assets and giving power back to creators and communities.
+                        We are building the world&apos;s first AI-powered meme marketplace, turning internet culture into on-chain assets and giving power back to creators and communities.
                         </p>
                     </div>
                 </div>
@@ -93,7 +93,7 @@ export default function AboutPage() {
                             🚀 Join the Movement
                         </h2>
                         <p className="text-xl text-gray-300 mb-4 leading-relaxed">
-                            Whether you're a memer, dev, artist, or curious fan — Meme Minto AI is your playground.
+                            Whether you are a memer, dev, artist, or curious fan — Meme Minto AI is your playground.
                         </p>
                         <p className="text-xl text-gray-300 leading-relaxed">
                             Create, chat, trade, and shape the future of memes.

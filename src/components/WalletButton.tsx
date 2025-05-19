@@ -3,20 +3,20 @@
 
 import { Wallet } from '@coinbase/onchainkit/wallet';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
-import { Box, Button } from '@mui/material';
-import { useAccount, useConnect, useDisconnect } from 'wagmi';
-import { cbWalletConnector } from '@/provider/wagmi';
+import { Box } from '@mui/material';
+// import { useAccount, useConnect, useDisconnect } from 'wagmi';
+// import { cbWalletConnector } from '@/provider/wagmi';
 
 const WalletButton = () => {
   useWalletAuth(); // triggers auth logic when wallet is connected
-  const { isConnected, address } = useAccount();
-  const { connect } = useConnect();
-  const { disconnect } = useDisconnect();
+  // const { isConnected, address } = useAccount();
+  // const { connect } = useConnect();
+  // const { disconnect } = useDisconnect();
 
   // Function to handle connecting with Coinbase Wallet
-  const handleConnect = () => {
-    connect({ connector: cbWalletConnector });
-  };
+  // const handleConnect = () => {
+  //   connect({ connector: cbWalletConnector });
+  // };
 
   return (
     <Box

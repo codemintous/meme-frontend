@@ -2,7 +2,6 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
   Box,
-  Button,
   TextField,
   Typography,
   Divider,
@@ -17,7 +16,7 @@ import { useParams } from "next/navigation";
 import factory_contract_abi from "@/data/factory_contract_abi.json"
 import agent_factory_contract_generator_abi from "@/data/agent_factory_contract_generator_abi.json"
 
-import { BrowserProvider, Contract, Interface, LogDescription, parseUnits } from "ethers";
+import { Interface, LogDescription, parseUnits } from "ethers";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import {
@@ -31,10 +30,10 @@ import type {
   TransactionError,
   TransactionResponse,
 } from '@coinbase/onchainkit/transaction';
-import type { ContractFunctionParameters, Address } from 'viem';
-import { createPublicClient, http } from 'viem';
-import { baseSepolia } from 'viem/chains';
-import { useAccount } from "wagmi";
+import type {  Address } from 'viem';
+// import { createPublicClient, http } from 'viem';
+// import { baseSepolia } from 'viem/chains';
+// import { useAccount } from "wagmi";
 
 export default function LaunchTokenPage() {
   // All hooks must be at the top, before any return
@@ -51,7 +50,7 @@ export default function LaunchTokenPage() {
     instagram: '',
     facebook: '',
   });
-  const { isConnected, address } = useAccount();
+  // const { isConnected, address } = useAccount();
   const router = useRouter();
   const param = useParams();
   const id = param.id;
@@ -64,19 +63,16 @@ export default function LaunchTokenPage() {
   
     return [
       {
-        address: agentfactoryAddress,
+        to: agentfactoryAddress, // ✅ changed from "address" to "to"
         abi: agent_factory_contract_generator_abi,
         functionName: 'createAgent',
-        args: [
-          tokenName,
-          tokenSymbol,
-        ],
+        args: [tokenName, tokenSymbol],
         meta: {
           description: `Launch agent for ${tokenName} (${tokenSymbol})`
         }
       },
       {
-        address: factoryAddress,
+        to: factoryAddress, // ✅ changed from "address" to "to"
         abi: factory_contract_abi,
         functionName: 'launchToken',
         args: [
@@ -198,6 +194,7 @@ export default function LaunchTokenPage() {
           }
         } catch (e) {
           // Not a factory event
+          console.log(e);
         }
   
         // AgentCreated event
@@ -215,12 +212,13 @@ export default function LaunchTokenPage() {
           }
         } catch (e) {
           // Not an agent factory event
+          console.log(e);
         }
       }
     }
   
-    if (tokenAddress , agentAddress) {
-      await updateTokenDetails(tokenAddress , agentAddress);
+    if (tokenAddress && agentAddress) {
+      await updateTokenDetails(tokenAddress, agentAddress);
     } else {
       console.warn("⚠️ No TokenLaunched event found — skipping API update");
     }

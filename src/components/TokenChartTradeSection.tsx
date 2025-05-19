@@ -69,7 +69,7 @@ export default function TokenChartTradeSection({ token }: TokenChartTradeSection
                 Trading Not Available
               </Typography>
               <Typography variant="body2" color="text.secondary" textAlign="center">
-                This token doesn't have a valid contract address yet. It may not have been launched.
+                This token does not have a valid contract address yet. It may not have been launched.
               </Typography>
             </Box>
           )}
