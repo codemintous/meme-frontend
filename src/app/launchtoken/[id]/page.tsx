@@ -34,6 +34,7 @@ import type {  Address } from 'viem';
 // import { createPublicClient, http } from 'viem';
 // import { baseSepolia } from 'viem/chains';
 // import { useAccount } from "wagmi";
+import type { ContractFunctionParameters } from 'viem'
 
 export default function LaunchTokenPage() {
   // All hooks must be at the top, before any return
@@ -72,7 +73,7 @@ export default function LaunchTokenPage() {
           parseUnits("1", 14),
         ],
       },
-    ];
+    ] as ContractFunctionParameters[]; // ✅ casting to fix the type
   }, [tokenName, tokenSymbol, supply]);
   
 
