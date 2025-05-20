@@ -59,36 +59,22 @@ export default function LaunchTokenPage() {
     if (!tokenName || !tokenSymbol || !supply) return [];
   
     const factoryAddress = process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS as Address;
-    const agentfactoryAddress = process.env.NEXT_PUBLIC_AGENT_FACTORY_CONTRACT_ADDRESS as Address;
   
     return [
       {
-        to: agentfactoryAddress, // ✅ changed from "address" to "to"
-        abi: agent_factory_contract_generator_abi,
-        functionName: 'createAgent',
-        args: [tokenName, tokenSymbol],
-        meta: {
-          description: `Launch agent for ${tokenName} (${tokenSymbol})`
-        }
-      },
-      {
-        to: factoryAddress, // ✅ changed from "address" to "to"
+        address: factoryAddress,
         abi: factory_contract_abi,
         functionName: 'launchToken',
         args: [
           tokenName,
           tokenSymbol,
           parseUnits(supply, 18),
-          parseUnits("1", 14)
+          parseUnits("1", 14),
         ],
-        meta: {
-          description: `Launch ${tokenName} (${tokenSymbol}) token`
-        }
-      }
+      },
     ];
   }, [tokenName, tokenSymbol, supply]);
   
-
 
 
   

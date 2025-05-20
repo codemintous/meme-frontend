@@ -36,7 +36,7 @@ import WalletButton from '@/components/WalletButton';
 import { useAuth } from '@/context/AuthContext';
 
 import platform_contract_abi from "@/data/platform_contract_abi.json"
-import { BrowserProvider, Contract, formatUnits, parseEther } from "ethers";
+import { parseEther } from "ethers";
 
 // Add these interfaces at the top of the file
 interface ChatMessage {
@@ -68,7 +68,7 @@ export default function AgentDetailPage() {
     const [popupTrade, setPopupTrade] = useState(false);
     const [donatePopup, setDonatePopup] = useState(false);
     const [donateAmount, setDonateAmount] = useState('');
-    const [tokenBalance, setTokenBalance] = useState<string>('0');
+    // const [tokenBalance, setTokenBalance] = useState<string>('0');
     const open = Boolean(anchorEl);
     const router = useRouter();
     const params = useParams();
@@ -78,6 +78,8 @@ export default function AgentDetailPage() {
     const [userImages, setUserImages] = useState<string[]>([]);
     const [communityImages, setCommunityImages] = useState<string[]>([]);
     const [isSending, setIsSending] = useState(false);
+
+    console.log("connected wallet address................", address);
 
     // Add function to extract images from chat history
     const extractImagesFromChat = (messages: ChatMessage[]) => {
@@ -239,40 +241,41 @@ export default function AgentDetailPage() {
         }
     }, [agentId]);
 
-    const fetchTokenBalance = async (
-        address: string,
-        setTokenBalance: (balance: string) => void
-    ) => {
-        try {
-            if (!window.ethereum) {
-                console.error("Ethereum provider not found.");
-                return;
-            }
+    // const fetchTokenBalance = async (
+    //     address: string,
+    //     setTokenBalance: (balance: string) => void
+    // ) => {
+    //     try {
+    //         if (!window.ethereum) {
+    //             console.error("Ethereum provider not found.");
+    //             return;
+    //         }
 
-            const provider = new BrowserProvider(window.ethereum);
-            const signer = await provider.getSigner();
+    //         const provider = new BrowserProvider(window.ethereum);
+    //         const signer = await provider.getSigner();
+    //         console.log("signer ...........", signer);
 
-            const contract = new Contract(
-                process.env.NEXT_PUBLIC_PLATFORMBALANCE_CONTRACT_ADDRESS!,
-                platform_contract_abi,
-                signer
-            );
+    //         const contract = new Contract(
+    //             process.env.NEXT_PUBLIC_PLATFORMBALANCE_CONTRACT_ADDRESS!,
+    //             platform_contract_abi,
+    //             signer
+    //         );
 
-            const tx = await contract.getTokenBalance(address);
-            const formattedBalance = formatUnits(tx, 0);
+    //         const tx = await contract.getTokenBalance(address);
+    //         const formattedBalance = formatUnits(tx, 0);
 
-            console.log("User token balance:", formattedBalance, tx);
-            setTokenBalance(formattedBalance);
-        } catch (err) {
-            console.error("Error fetching token balance:", err);
-        }
-    };
+    //         console.log("User token balance:", formattedBalance, tx);
+    //         setTokenBalance(formattedBalance);
+    //     } catch (err) {
+    //         console.error("Error fetching token balance:", err);
+    //     }
+    // };
 
-    useEffect(() => {
-        if (address) {
-            fetchTokenBalance(address, setTokenBalance);
-        }
-    }, [isConnected, address]);
+    // useEffect(() => {
+    //     if (address) {
+    //         fetchTokenBalance(address, setTokenBalance);
+    //     }
+    // }, [isConnected, address]);
 
     // Update the useEffect for fetching user images
     useEffect(() => {
@@ -343,14 +346,11 @@ export default function AgentDetailPage() {
 
           console.log("Transaction mined:", receipt);
 
-          // Get the signer to fetch the user address
-          const provider = new BrowserProvider(window.ethereum);
-          const signer = await provider.getSigner();
-          const userAddress = await signer.getAddress();
+   
 
-          if (userAddress) {
-            await fetchTokenBalance(userAddress, setTokenBalance);
-          }
+        //   if (address) {
+        //     await fetchTokenBalance(address, setTokenBalance);
+        //   }
     
         } catch (error) {
             console.error('Error during buy transaction:', error);
@@ -598,6 +598,19 @@ export default function AgentDetailPage() {
         }
     }, [messages]);
 
+    // Add useEffect to watch for wallet connection
+    useEffect(() => {
+        if (isConnected) {
+            setIsShowWalletModal(false);
+        }
+    }, [isConnected]);
+
+    // Add this function to handle modal closing
+    const handleCloseWalletModal = () => {
+        console.log('Closing modal');
+        setIsShowWalletModal(false);
+    };
+
     return (
         <Box display="flex" flexDirection="row" height="100vh">
             {/* Left/Main Section */}
@@ -655,7 +668,8 @@ export default function AgentDetailPage() {
                             boxShadow={3}
                         >
                             <Typography variant="body2" color="white" mr={2}>
-                                <strong>mememinto</strong> has <strong>{tokenBalance} credits</strong>
+                                <strong>mememinto</strong> has <strong>0 credits</strong>
+                                {/* <strong>mememinto</strong> has <strong>{tokenBalance} credits</strong> */}
                             </Typography>
                             <Button
                                 variant="contained"
@@ -1117,7 +1131,7 @@ export default function AgentDetailPage() {
 
             <Dialog
                 open={isShowWalletModal}
-                onClose={() => setIsShowWalletModal(false)}
+                onClose={handleCloseWalletModal}
                 PaperProps={{
                     sx: {
                         bgcolor: '#121212',
@@ -1143,10 +1157,7 @@ export default function AgentDetailPage() {
                         <WalletButton />
                         <Button
                             variant="outlined"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setIsShowWalletModal(false);
-                            }}
+                            onClick={handleCloseWalletModal}
                             sx={{ color: 'white', borderColor: 'white' }}
                         >
                             Cancel
