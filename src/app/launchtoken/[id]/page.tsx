@@ -14,7 +14,6 @@ import { useAuth } from "@/context/AuthContext";
 import ConnectWalletPrompt from "@/components/ConnectWalletPrompt";
 import { useParams } from "next/navigation";
 import factory_contract_abi from "@/data/factory_contract_abi.json"
-import agent_factory_contract_generator_abi from "@/data/agent_factory_contract_generator_abi.json"
 
 import { Interface, LogDescription, parseUnits } from "ethers";
 import axios from "axios";
@@ -113,7 +112,7 @@ export default function LaunchTokenPage() {
     );
   }
 
-  const updateTokenDetails = async (tokenAddress: string , agentAddress: string) => {
+  const updateTokenDetails = async (tokenAddress: string) => {
     if (!jwtToken) {
       console.error("No JWT token available");
       return;
@@ -128,9 +127,8 @@ export default function LaunchTokenPage() {
             name: tokenName,
             symbol: tokenSymbol,
             description: tokenDesc,
-          },
-          agentContractAddress: agentAddress,
-        },
+          }
+                },
         {
           headers: {
             Authorization: `Bearer ${jwtToken}`,
@@ -157,10 +155,10 @@ export default function LaunchTokenPage() {
     );
   
     const factoryIface = new Interface(factory_contract_abi);
-    const agentFactoryIface = new Interface(agent_factory_contract_generator_abi);
+ 
   
     let tokenAddress: string | null = null;
-    let agentAddress: string | null = null;
+
   
     // Loop through all receipts if it's a batch
     for (const txReceipt of response.transactionReceipts || []) {
@@ -183,36 +181,16 @@ export default function LaunchTokenPage() {
           // Not a factory event
           console.log(e);
         }
-  
-        // AgentCreated event
-        try {
-          const parsedAgent = agentFactoryIface.parseLog({
-            topics: log.topics as string[],
-            data: log.data
-          }) as LogDescription;
-  
-          if (parsedAgent.name === "AgentCreated") {
-            agentAddress = parsedAgent.args[2]; // address is at index 2
-            console.log("🤖 AgentCreated - Agent Address:", agentAddress);
-            console.log("📜 Full AgentCreated Parsed Log:", parsedAgent);
-            console.log("📜 Agent Creation Tx Receipt:", txReceipt);
-          }
-        } catch (e) {
-          // Not an agent factory event
-          console.log(e);
-        }
+
       }
     }
   
-    if (tokenAddress && agentAddress) {
-      await updateTokenDetails(tokenAddress, agentAddress);
+    if (tokenAddress) {
+      await updateTokenDetails(tokenAddress);
     } else {
       console.warn("⚠️ No TokenLaunched event found — skipping API update");
     }
   
-    if (!agentAddress) {
-      console.warn("⚠️ No AgentCreated event found");
-    }
   };
   
 
