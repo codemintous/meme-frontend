@@ -8,21 +8,11 @@ import {
   LinearProgress,
   Avatar,
 } from "@mui/material";
+import { MemeAgent } from "@/utils/interface";
 
-interface Token {
-  logo: string;
-  title: string;
-  subtitle: string;
-  description: string;
-  stats: {
-    tx: number;
-    volume: string;
-    value: string;
-    percent: number;
-  };
-}
 
-const LaunchedTokenCard: React.FC<{ token: Token }> = ({ token }) => {
+
+const LaunchedTokenCard: React.FC<{ token: MemeAgent }> = ({ token }) => {
   return (
     <Card
       sx={{
@@ -39,33 +29,33 @@ const LaunchedTokenCard: React.FC<{ token: Token }> = ({ token }) => {
         {/* Header: Avatar + Title/Sub */}
         <Box display="flex" alignItems="center" gap={2} mb={1}>
           <Avatar
-            src={token.logo}
+            src={token?.profileImageUrl}
             variant="rounded"
             sx={{ width: 48, height: 48 }}
           />
           <Box>
             <Typography variant="subtitle1" fontWeight="bold">
-              {token.title}
+              {token.tokenDetails?.name}
             </Typography>
             <Typography variant="caption" color="gray">
-              {token.subtitle}
+              {token.tokenDetails?.symbol}
             </Typography>
           </Box>
         </Box>
 
         {/* Description */}
         <Typography mt={1} fontSize={14} color="#ccc">
-          {token.description}
+          {token.tokenDetails?.description}
         </Typography>
 
         {/* Progress */}
         <Box mt={2}>
           <Typography variant="caption" color="gray">
-            {token.stats.percent.toFixed(2)}%
+            100%
           </Typography>
           <LinearProgress
             variant="determinate"
-            value={token.stats.percent}
+            value={70}
             sx={{
               backgroundColor: "#444",
               "& .MuiLinearProgress-bar": {
@@ -85,10 +75,12 @@ const LaunchedTokenCard: React.FC<{ token: Token }> = ({ token }) => {
             fontSize={13}
             color="#ccc"
           >
-            <span>↔ {token.stats.tx}</span>
-            <span>{token.stats.volume} vol</span>
-            <span>${token.stats.value}</span>
-          </Box>
+            <span>↔ 0</span>
+            <span>0 vol</span>
+            <span>$0</span>
+          </Box> 
+
+
         </Box>
       </CardContent>
     </Card>
