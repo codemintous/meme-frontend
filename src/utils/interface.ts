@@ -18,5 +18,6 @@ export interface MemeAgent {
     __v: number;
     name : string;
     category: string;
+    agentContractAddress: string;
 
   }

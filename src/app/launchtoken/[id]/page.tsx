@@ -14,7 +14,7 @@ import { useAuth } from "@/context/AuthContext";
 import ConnectWalletPrompt from "@/components/ConnectWalletPrompt";
 import { useParams } from "next/navigation";
 import factory_contract_abi from "@/data/factory_contract_abi.json"
-
+import agent_factory_contract_generator_abi from "@/data/agent_factory_contract_generator_abi.json"
 import { Interface, LogDescription, parseUnits } from "ethers";
 import axios from "axios";
 import { useRouter } from "next/navigation";
@@ -59,8 +59,21 @@ export default function LaunchTokenPage() {
     if (!tokenName || !tokenSymbol || !supply) return [];
   
     const factoryAddress = process.env.NEXT_PUBLIC_FACTORY_CONTRACT_ADDRESS as Address;
+    const agentfactoryAddress = process.env.NEXT_PUBLIC_AGENT_FACTORY_CONTRACT_ADDRESS as Address; 
   
     return [
+      {
+        address: agentfactoryAddress,
+        abi: agent_factory_contract_generator_abi,
+        functionName: 'createAgent',
+        args: [
+          tokenName,
+          tokenSymbol,
+        ],
+        meta: {
+          description: `Launch agent for ${tokenName} (${tokenSymbol})`
+        }
+      },
       {
         address: factoryAddress,
         abi: factory_contract_abi,
@@ -112,7 +125,7 @@ export default function LaunchTokenPage() {
     );
   }
 
-  const updateTokenDetails = async (tokenAddress: string) => {
+  const updateTokenDetails = async (tokenAddress: string , agentAddress: string) => {
     if (!jwtToken) {
       console.error("No JWT token available");
       return;
@@ -127,8 +140,11 @@ export default function LaunchTokenPage() {
             name: tokenName,
             symbol: tokenSymbol,
             description: tokenDesc,
-          }
-                },
+          },
+
+          agentContractAddress : agentAddress,
+                
+        },
         {
           headers: {
             Authorization: `Bearer ${jwtToken}`,
@@ -155,10 +171,10 @@ export default function LaunchTokenPage() {
     );
   
     const factoryIface = new Interface(factory_contract_abi);
- 
+    const agentFactoryIface = new Interface(agent_factory_contract_generator_abi);
   
     let tokenAddress: string | null = null;
-
+    let agentAddress: string | null = null;
   
     // Loop through all receipts if it's a batch
     for (const txReceipt of response.transactionReceipts || []) {
@@ -178,20 +194,37 @@ export default function LaunchTokenPage() {
             console.log("📜 Token Launch Tx Receipt:", txReceipt);
           }
         } catch (e) {
-          // Not a factory event
+          // Not a TokenLaunched event
           console.log(e);
         }
-
+  
+        // AgentCreated event
+        try {
+          const parsedAgent = agentFactoryIface.parseLog({
+            topics: log.topics as string[],
+            data: log.data
+          }) as LogDescription;
+  
+          if (parsedAgent.name === "AgentCreated") {
+            agentAddress = parsedAgent.args[2]; // address is at index 2
+            console.log("🤖 AgentCreated - Agent Address:", agentAddress);
+            console.log("📜 Full AgentCreated Parsed Log:", parsedAgent);
+            console.log("📜 Agent Creation Tx Receipt:", txReceipt);
+          }
+        } catch (e) {
+          // Not an AgentCreated event
+          console.log(e);
+        }
       }
     }
   
-    if (tokenAddress) {
-      await updateTokenDetails(tokenAddress);
+    if (tokenAddress && agentAddress) {
+      await updateTokenDetails(tokenAddress, agentAddress);
     } else {
-      console.warn("⚠️ No TokenLaunched event found — skipping API update");
+      console.warn("⚠️ Missing TokenLaunched or AgentCreated event — skipping API update");
     }
-  
   };
+  
   
 
   const handleError = (error: TransactionError) => {

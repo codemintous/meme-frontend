@@ -15,7 +15,7 @@ import {
     Stack,
     CircularProgress
 } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import SendIcon from '@mui/icons-material/Send';
 import { Info, Edit, ContentCopy } from '@mui/icons-material';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
@@ -36,7 +36,15 @@ import WalletButton from '@/components/WalletButton';
 import { useAuth } from '@/context/AuthContext';
 
 import platform_contract_abi from "@/data/platform_contract_abi.json"
-import { parseEther } from "ethers";
+import { Address, ContractFunctionParameters } from 'viem';
+import { formatUnits, Contract, JsonRpcProvider,  parseUnits  } from "ethers";
+import {
+    Transaction,
+    TransactionButton,
+    TransactionStatus,
+    TransactionStatusAction,
+    TransactionStatusLabel,
+  } from '@coinbase/onchainkit/transaction';
 
 // Add these interfaces at the top of the file
 interface ChatMessage {
@@ -68,7 +76,7 @@ export default function AgentDetailPage() {
     const [popupTrade, setPopupTrade] = useState(false);
     const [donatePopup, setDonatePopup] = useState(false);
     const [donateAmount, setDonateAmount] = useState('');
-    // const [tokenBalance, setTokenBalance] = useState<string>('0');
+    const [tokenBalance, setTokenBalance] = useState<string>('0');
     const open = Boolean(anchorEl);
     const router = useRouter();
     const params = useParams();
@@ -80,6 +88,67 @@ export default function AgentDetailPage() {
     const [isSending, setIsSending] = useState(false);
 
     console.log("connected wallet address................", address);
+
+
+    const fetchTokenBalance = async (
+        address: string,
+        setTokenBalance: (balance: string) => void
+      ) => {
+        try {
+          if (!window.ethereum) {
+            console.error("Ethereum provider not found.");
+            return;
+          }
+    
+          const memeTokenAddress = process.env.NEXT_PUBLIC_PLATFORMBALANCE_CONTRACT_ADDRESS;
+          if (!memeTokenAddress) {
+            console.error("Contract address is not defined in environment variables");
+            return;
+          }
+          console.log("[DEBUG] Fetching MEME balance for user address:", address);
+          console.log("[DEBUG] Using MEME token contract address:", memeTokenAddress);
+    
+          // Use ethers.js to call balanceOf
+          // Use a public Base Sepolia RPC provider for read-only queries
+          const rpcUrl = "https://base-sepolia-rpc.publicnode.com";
+          const provider = new JsonRpcProvider(rpcUrl);
+          const contract = new Contract(
+            memeTokenAddress,
+            platform_contract_abi,
+            provider
+          );
+          console.log('[DEBUG] Contract address:', memeTokenAddress);
+          let balance;
+          try {
+            balance = await contract.getBalance(address);
+            console.log('[DEBUG] Raw balance value (BigNumber):', balance.toString());
+          } catch (err) {
+            console.error('[DEBUG] Error calling balanceOf:', err);
+            setTokenBalance('0');
+            return;
+          }
+          let formattedBalance;
+          try {
+            formattedBalance = formatUnits(balance, 18); // 18 decimals typical for ERC20
+            console.log('[DEBUG] Formatted balance:', formattedBalance);
+          } catch (err) {
+            console.error('[DEBUG] Error formatting balance:', err);
+            setTokenBalance('0');
+            return;
+          }
+          setTokenBalance(formattedBalance);
+        } catch (err) {
+          console.error("Error fetching token balance:", err);
+          setTokenBalance('0');
+        }
+      };
+    
+      useEffect(() => {
+        if (memeDetail?.agentContractAddress) {
+          fetchTokenBalance(memeDetail.agentContractAddress, setTokenBalance);
+        }
+      }, [isConnected, memeDetail?.agentContractAddress]);
+
 
     // Add function to extract images from chat history
     const extractImagesFromChat = (messages: ChatMessage[]) => {
@@ -110,12 +179,12 @@ export default function AgentDetailPage() {
                     }
                 }
             );
-            
+
             console.log('Raw chat history response:', response.data);
-            
+
             if (response.data && Array.isArray(response.data.messages)) {
                 // Sort messages by timestamp in ascending order
-                const sortedMessages = [...response.data.messages].sort((a, b) => 
+                const sortedMessages = [...response.data.messages].sort((a, b) =>
                     new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
                 );
 
@@ -126,10 +195,10 @@ export default function AgentDetailPage() {
                 // Transform the chat history into our message format with proper typing
                 const formattedMessages = sortedMessages.flatMap((chat: ChatMessage) => {
                     console.log('Processing chat message:', chat);
-                    
+
                     // Create messages for both user message and bot response
                     const messages = [];
-                    
+
                     // Add user message
                     if (chat.message) {
                         messages.push({
@@ -137,7 +206,7 @@ export default function AgentDetailPage() {
                             sender: 'user' as const
                         });
                     }
-                    
+
                     // Add bot response
                     if (chat.response) {
                         messages.push({
@@ -153,10 +222,10 @@ export default function AgentDetailPage() {
                             sender: 'image' as const
                         });
                     }
-                    
+
                     return messages;
                 });
-                
+
                 console.log('Final formatted messages:', formattedMessages);
                 setMessages(formattedMessages);
 
@@ -294,7 +363,7 @@ export default function AgentDetailPage() {
                     );
 
                     console.log('Filtered images response:', response.data);
-                    
+
                     if (response.data && Array.isArray(response.data)) {
                         setUserImages(response.data);
                     } else {
@@ -304,7 +373,7 @@ export default function AgentDetailPage() {
                 } catch (error: unknown) {
                     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
                     const errorResponse = error as { response?: { status?: number; data?: unknown } };
-                    
+
                     console.error("Error fetching user images:", {
                         message: errorMessage,
                         status: errorResponse.response?.status,
@@ -318,46 +387,74 @@ export default function AgentDetailPage() {
         fetchUserImages();
     }, [tab, address, agentId]);
 
-    const handleDonate = async () => {
-        try {
-    
-          // Request account access if needed
-          await window.ethereum.request({ method: 'eth_requestAccounts' });
 
-          // Import the paymaster utilities
-          const { createPaymasterContract, executePaymasterTransaction } = await import('@/utils/paymasterUtils');
+    const donateContractParams = useMemo(() => {
+        if (!donateAmount || !memeDetail?.agentContractAddress) return [];
 
-          // Create a contract with paymaster support
-          const contract = await createPaymasterContract(
-            process.env.NEXT_PUBLIC_PLATFORMBALANCE_CONTRACT_ADDRESS!,
-            platform_contract_abi
-          );
+        const platformAddress = process.env.NEXT_PUBLIC_PLATFORMBALANCE_CONTRACT_ADDRESS as Address;
+        const agentAddress = memeDetail.agentContractAddress;
 
-          const totalCost = (parseInt(donateAmount.toString()) * 0.0001).toString();
-          console.log("buy cost..................", parseEther(totalCost));
+        return [
+            {
+                address: platformAddress,
+                abi: platform_contract_abi,
+                functionName: 'transfer',
+                args: [
+                    agentAddress,
+                    parseUnits(donateAmount, 18), // donation token amount
+                ],
+                meta: {
+                    description: `Donate ${donateAmount} tokens to agent ${agentAddress}`
+                }
+            },
+        ] as unknown as ContractFunctionParameters[];
+    }, [donateAmount, memeDetail?.agentContractAddress]);
 
-          // Execute the transaction with paymaster support
-          const receipt = await executePaymasterTransaction(
-            contract,
-            'buyTokens',
-            [],
-            { value: parseEther(totalCost) }
-          );
+    // const handleDonate = async () => {
+    //     try {
 
-          console.log("Transaction mined:", receipt);
+    //         // Request account access if needed
+    //         await window.ethereum.request({ method: 'eth_requestAccounts' });
 
-   
+    //         // Import the paymaster utilities
+    //         const { createPaymasterContract, executePaymasterTransaction } = await import('@/utils/paymasterUtils');
 
-        //   if (address) {
-        //     await fetchTokenBalance(address, setTokenBalance);
-        //   }
-    
-        } catch (error) {
-            console.error('Error during buy transaction:', error);
-        } finally {
-            console.log("finally block....");
-        }
-    };
+    //         // Create a contract with paymaster support
+    //         const contract = await createPaymasterContract(
+    //             process.env.NEXT_PUBLIC_PLATFORMBALANCE_CONTRACT_ADDRESS!,
+    //             platform_contract_abi
+    //         );
+
+    //         const totalCost = (parseInt(donateAmount.toString()) * 0.0001).toString();
+    //         console.log("buy cost..................", parseEther(totalCost));
+
+    //         // Execute the transaction with paymaster support
+    //         const receipt = await executePaymasterTransaction(
+    //             contract,
+    //             'transfer',
+    //             [
+    //                 memeDetail?.agentContractAddress,
+    //                 parseUnits(donateAmount, 18), // token amount
+    //             ],
+    //             {
+    //                 value: parseEther(totalCost), // gas cost, paid in ETH
+    //             }
+    //         );
+
+    //         console.log("Transaction mined:", receipt);
+
+
+
+    //         //   if (address) {
+    //         //     await fetchTokenBalance(address, setTokenBalance);
+    //         //   }
+
+    //     } catch (error) {
+    //         console.error('Error during buy transaction:', error);
+    //     } finally {
+    //         console.log("finally block....");
+    //     }
+    // };
 
     const handleTradeSubmit = (mode: "buy" | "sell", amount: number, slippage: number) => {
         console.log("Trade submitted:", { mode, amount, slippage });
@@ -392,7 +489,7 @@ export default function AgentDetailPage() {
                     agentId,
                     message: inputValue
                 });
-                
+
                 const saveResponse = await axios.post(
                     `${process.env.NEXT_PUBLIC_BASE_URL}/api/agents/chat`,
                     {
@@ -422,7 +519,7 @@ export default function AgentDetailPage() {
             }
 
 
-            
+
 
             setMessages([...messages, userMessage, loadingMessage]);
             setInputValue('');
@@ -448,7 +545,7 @@ export default function AgentDetailPage() {
                         console.log("Image generation response:", response.data);
 
                         const generatedImageUrl = response.data.imageUrl;
-                        
+
                         if (!generatedImageUrl) {
                             throw new Error('No image URL received in response');
                         }
@@ -460,7 +557,7 @@ export default function AgentDetailPage() {
                                 message: inputValue,
                                 imageUrl: generatedImageUrl
                             });
-                            
+
                             const imageSaveResponse = await axios.post(
                                 `${process.env.NEXT_PUBLIC_BASE_URL}/api/agents/chat`,
                                 {
@@ -476,7 +573,7 @@ export default function AgentDetailPage() {
                                 }
                             );
                             console.log('Image message save response:', imageSaveResponse.data);
-                        }  catch (error: unknown) {
+                        } catch (error: unknown) {
                             if (axios.isAxiosError(error)) {
                                 console.error('Error saving user image:', {
                                     message: error.message,
@@ -486,7 +583,7 @@ export default function AgentDetailPage() {
                             } else {
                                 console.error('Unknown error:', error);
                             }
-                    
+
                         }
 
                         setMessages((prev) => [
@@ -539,7 +636,7 @@ export default function AgentDetailPage() {
                                 agentId,
                                 message: response.data.response
                             });
-                            
+
                             const botSaveResponse = await axios.post(
                                 `${process.env.NEXT_PUBLIC_BASE_URL}/api/agents/chat`,
                                 {
@@ -564,7 +661,7 @@ export default function AgentDetailPage() {
                             } else {
                                 console.error('Unknown error:', error);
                             }
-                    
+
                         }
 
 
@@ -668,9 +765,11 @@ export default function AgentDetailPage() {
                             boxShadow={3}
                         >
                             <Typography variant="body2" color="white" mr={2}>
-                                <strong>mememinto</strong> has <strong>0 credits</strong>
-                                {/* <strong>mememinto</strong> has <strong>{tokenBalance} credits</strong> */}
+                                {/* <strong>mememinto</strong> has <strong>0 credits</strong> */}
+                                <strong>mememinto</strong> has <strong>{tokenBalance} credits</strong>
                             </Typography>
+
+
                             <Button
                                 variant="contained"
                                 sx={{
@@ -695,10 +794,10 @@ export default function AgentDetailPage() {
 
 
                 {/* Chat Area */}
-                <Box 
+                <Box
                     className="chat-container"
-                    flexGrow={1} 
-                    overflow="auto" 
+                    flexGrow={1}
+                    overflow="auto"
                     px={1}
                     sx={{
                         '&::-webkit-scrollbar': {
@@ -761,15 +860,15 @@ export default function AgentDetailPage() {
                                         </Box>
                                         <img src={msg.text} alt="Generated Meme" style={{ maxWidth: '100%', borderRadius: '4px' }} />
                                         <Box display="flex" justifyContent="flex-end" mt={1}>
-                                            <IconButton 
-                                                sx={{ color: 'white' }} 
+                                            <IconButton
+                                                sx={{ color: 'white' }}
                                                 onClick={() => {
                                                     alert('Video feature coming soon!');
                                                 }}
                                             >
                                                 <VideoIcon />
                                             </IconButton>
-                                            <IconButton sx={{ color: 'white' }} onClick={() => {/* Handle regenerate action */}}>
+                                            <IconButton sx={{ color: 'white' }} onClick={() => {/* Handle regenerate action */ }}>
                                                 <RefreshIcon />
                                             </IconButton>
                                         </Box>
@@ -1075,7 +1174,7 @@ export default function AgentDetailPage() {
             </Dialog>
 
             <AgentPopup open={popupOpen} handleClose={() => setPopupOpen(false)} agent={memeDetail} />
-           
+
 
             <Dialog
                 open={donatePopup}
@@ -1109,19 +1208,31 @@ export default function AgentDetailPage() {
                         You will be charged {(Number(donateAmount) * 0.0001)} base sepolia
                     </Typography>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setDonatePopup(false)} sx={{ color: "#aaa" }}>
+                <DialogActions sx={{ justifyContent: "center", flexDirection: "flex", alignItems:"center", gap: 1 }} >
+                   
+
+                    <Transaction
+                                contracts={donateContractParams}
+                             className="w-fit"
+                                chainId={84532}
+                                // onError={handleError}
+                                onSuccess={() => {
+                                    setDonatePopup(false);
+                                    setDonateAmount("");
+                                  }}
+                                isSponsored={true}
+                            >
+                                <TransactionButton
+                                    className="w-fit py-2 mt-2"
+                                    text="Donate"
+                                />
+                                <TransactionStatus>
+                                    <TransactionStatusLabel />
+                                    <TransactionStatusAction />
+                                </TransactionStatus>
+                            </Transaction>
+                            <Button onClick={() => setDonatePopup(false)} sx={{ color: "#aaa" }}>
                         Cancel
-                    </Button>
-                    <Button
-                        onClick={() => {
-                            handleDonate();
-                            console.log('Donating:', donateAmount);
-                            setDonatePopup(false);
-                        }}
-                        sx={{ color: "#9333ea" }}
-                    >
-                        Donate
                     </Button>
                 </DialogActions>
             </Dialog>
