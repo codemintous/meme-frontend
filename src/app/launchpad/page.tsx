@@ -12,6 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 import ConnectWalletPrompt from "@/components/ConnectWalletPrompt";
 import axios from "axios";
 import { MemeAgent } from "@/utils/interface";
+import Link from "next/link";
 
 const categories = ["Trending", "AI", "Gaming", "Memes", "Tools", "Community"];
 
@@ -117,20 +118,28 @@ export default function LaunchpadPage() {
                 </Box>
             ) : (
                 <Box display="flex" flexWrap="wrap" justifyContent="evenly">
-                    {memeAgents.map((token) => (
-                        <Box
-                            key={token._id}
-                            sx={{
-                                flex: "1 1 calc(33.333% - 20px)",
-                                borderRadius: 2,
-                                p: 2,
-                                minWidth: "300px",
-                                color: "white",
-                            }}
-                        >
-                            <LaunchedTokenCard token={token} />
-                        </Box>
-                    ))}
+                    {memeAgents
+                        .filter((token) => token.tokenDetails?.name) // Only include those with tokenDetails.name
+                        .map((token) => (
+                            <Box
+                                key={token._id}
+                                sx={{
+                                    flex: "1 1 calc(33.333% - 20px)",
+                                    borderRadius: 2,
+                                    p: 2,
+                                    minWidth: "300px",
+                                    color: "white",
+                                }}
+                            >
+                                <Link
+                                    href={`/launchpad/${token._id}`}
+                                    style={{ textDecoration: "none", color: "inherit" }}
+                                >
+                                    <LaunchedTokenCard token={token} />
+                                </Link>
+                            </Box>
+                        ))}
+
                 </Box>
             )}
         </Container>

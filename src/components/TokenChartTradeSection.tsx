@@ -38,8 +38,8 @@ export default function TokenChartTradeSection({ token }: TokenChartTradeSection
         <Box flex={{ xs: "1 1 100%", md: "1 1 70%" }} sx={{ border: "1px solid #333", borderRadius: 2, overflow: "hidden" }}>
           {hasValidTokenAddress ? (
             <iframe
-              src={`https://dexscreener.com/base/${token.tokenDetails?.tokenAddress}?embed=1&loadChartSettings=0&trades=0&tabs=0&info=0&chartLeftToolbar=0&chartTheme=dark&theme=dark&chartStyle=1&chartType=usd&interval=15`}
-              style={{ width: "100%", height: "400px", border: "none" }}
+              src={`https://dexscreener.com/base/0x0fb597d6cfe5be0d5258a7f017599c2a4ece34c7?embed=1&loadChartSettings=0&trades=0&tabs=0&info=0&chartLeftToolbar=0&chartTheme=dark&theme=dark&chartStyle=1&chartType=usd&interval=15`}
+              style={{ width: "100%", height: "500px", border: "none" }}
               title={`${token.tokenDetails?.name} Chart`}
             />
           ) : (
